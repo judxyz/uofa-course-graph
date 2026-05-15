@@ -28,3 +28,6 @@ __pycache__/
 node_modules/
 frontend/.env.production
 .aws-sam/
+backend/data/data_courses.json
+venv/
+.venv/

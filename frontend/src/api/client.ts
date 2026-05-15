@@ -9,8 +9,7 @@ export async function fetchJson<T>(input: URL | string, init?: RequestInit): Pro
 
   try {
     response = await fetch(input, init)
-  } catch (error) {
-
+  } catch {
     throw new Error(`Unable to connect to services.`)
   }
 

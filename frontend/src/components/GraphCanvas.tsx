@@ -3,7 +3,7 @@ import { DataSet } from 'vis-data'
 import { Network } from 'vis-network'
 import type { Edge, Node, Options } from 'vis-network'
 import { fetchCourse } from '../api/courses'
-import type { GraphEdge, GraphNode, GraphResponse, GroupType } from '../types/graph'
+import type { GraphNode, GraphResponse, GroupType } from '../types/graph'
 
 interface GraphCanvasProps {
   graph: GraphResponse | null
@@ -23,9 +23,6 @@ const AND_COLOR = '#752020'
 const AND_COLOR_BG = '#752020'
 const PREREQ_COLOR = '#752020'
 const PREREQ_COLOR_BG = '#752020'
-
-const REQUIREMENT_BACKGROUND = '#45007d'
-const REQUIREMENT_BORDER = '#45007d'
 
 const MOBILE_GRAPH_QUERY = '(max-width: 720px), (pointer: coarse)'
 const UI_FONT_FAMILY = 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
@@ -233,101 +230,6 @@ function isOrGroupNode(node: GraphNode | undefined) {
   return node.groupType === 'COREQ' && (node.visualStyle ?? '').trim().toLowerCase() === 'or'
 }
 
-function isRelationLabelGroup(node: Extract<GraphNode, { type: 'group' }>) {
-  const normalizedLabel = (node.displayLabel ?? node.label).trim().toUpperCase()
-  const normalizedVisualStyle = (node.visualStyle ?? '').trim().toLowerCase()
-  const isStyledCoreqNode = normalizedVisualStyle === 'and' || normalizedVisualStyle === 'or'
-  const isPrereqLabelNode = normalizedLabel === 'PREREQ'
-  const isCoreqLabelNode =
-    normalizedLabel === 'COREQ' &&
-    (node.groupType === 'UNKNOWN' || (node.groupType === 'COREQ' && !isStyledCoreqNode))
-
-  return isPrereqLabelNode || isCoreqLabelNode
-}
-
-function isRedundantTopLevelAndGroup(
-  node: Extract<GraphNode, { type: 'group' }>,
-  graph: GraphResponse,
-) {
-  if (node.depth !== 1 || node.groupType !== 'ALL_OF') {
-    return false
-  }
-
-  const rootNodeId = graph.nodes.find(
-    (candidate) => candidate.type === 'course' && candidate.courseId === graph.rootCourse.id,
-  )?.id
-
-  if (!rootNodeId) {
-    return false
-  }
-
-  // Only collapse the wrapper AND directly under root; nested ALL_OF groups still matter.
-  return graph.edges.some((edge) => edge.source === rootNodeId && edge.target === node.id)
-}
-
-export function simplifyPrereqRelationNodes(graph: GraphResponse): GraphResponse {
-  if (isDependencyView(graph)) {
-    return graph
-  }
-
-  const removableGroupIds = new Set(
-    graph.nodes
-      .filter((node) => {
-        if (node.type !== 'group') {
-          return false
-        }
-
-        return isRelationLabelGroup(node) || isRedundantTopLevelAndGroup(node, graph)
-      })
-      .map((node) => node.id),
-  )
-
-  if (removableGroupIds.size === 0) {
-    return graph
-  }
-
-  let nextEdges = [...graph.edges]
-
-  for (const nodeId of removableGroupIds) {
-    const incomingEdges = nextEdges.filter((edge) => edge.target === nodeId)
-    const outgoingEdges = nextEdges.filter((edge) => edge.source === nodeId)
-
-    nextEdges = nextEdges.filter((edge) => edge.source !== nodeId && edge.target !== nodeId)
-
-    // Bridge the removed relation-label node so semantic graph direction remains unchanged.
-    const bridgedEdges = incomingEdges.flatMap((incomingEdge, incomingIndex) =>
-      outgoingEdges.map((outgoingEdge, outgoingIndex) => ({
-        id: `${incomingEdge.id}-skip-${nodeId}-${incomingIndex}-${outgoingIndex}`,
-        source: incomingEdge.source,
-        target: outgoingEdge.target,
-        relationType: outgoingEdge.relationType,
-      })),
-    )
-
-    nextEdges.push(...bridgedEdges)
-  }
-
-  const dedupedEdges = new Map<string, GraphEdge>()
-
-  for (const edge of nextEdges) {
-    if (edge.source === edge.target) {
-      continue
-    }
-
-    const key = `${edge.source}|${edge.target}|${edge.relationType}`
-
-    if (!dedupedEdges.has(key)) {
-      dedupedEdges.set(key, edge)
-    }
-  }
-
-  return {
-    ...graph,
-    nodes: graph.nodes.filter((node) => !removableGroupIds.has(node.id)),
-    edges: Array.from(dedupedEdges.values()),
-  }
-}
-
 function isDependencyView(graph: GraphResponse) {
   return graph.meta.viewMode === 'dependency'
 }
@@ -413,42 +315,50 @@ function toVisNodes(graph: GraphResponse): Node[] {
           face: UI_FONT_FAMILY,
           bold: isRoot ? '700' : isUnavailable ? '400' : '500',
         },
+        widthConstraint: {
+          minimum: 96,
+          maximum: 140,
+        },
       }
     }
 
     if (node.type === 'requirement') {
+      const prerequisiteFill = getPrereqCourseFill(node.depth)
+      const isFirstOrSecondCourseLevel = node.depth === 2 || node.depth === 4 || node.depth === 3
+
       return {
         id: node.id,
         label: node.label,
         level: node.depth,
         shape: 'box',
+        borderWidth: 1.25,
         margin: {
-          top: 10,
-          right: 16,
-          bottom: 10,
-          left: 16,
+          top: 12,
+          right: 18,
+          bottom: 12,
+          left: 18,
         },
         color: {
-          background: REQUIREMENT_BACKGROUND,
-          border: REQUIREMENT_BORDER,
+          background: isPrereqView ? prerequisiteFill : '#752020',
+          border: isPrereqView ? '#1B4127' : '#752020',
           highlight: {
-            background: '#f1e6d8',
-            border: '#b89670',
+            background: isPrereqView ? prerequisiteFill : '#8b3a3a',
+            border: isPrereqView ? '#1B4127' : '#a96a6a',
           },
           hover: {
-            background: '#f1e6d8',
-            border: '#b89670',
+            background: isPrereqView ? prerequisiteFill : '#843232',
+            border: isPrereqView ? '#1B4127' : '#9b5656',
           },
         },
         font: {
-          color: '#5f4d38',
-          size: 14,
+          color: isFirstOrSecondCourseLevel || !isPrereqView ? '#ffffff' : '#000000',
+          size: 15,
           face: UI_FONT_FAMILY,
           bold: '500',
         },
         widthConstraint: {
-          minimum: 150,
-          maximum: 210,
+          minimum: 96,
+          maximum: 140,
         },
       }
     }
@@ -520,7 +430,18 @@ function toVisEdges(graph: GraphResponse): Edge[] {
   })
 }
 
+function graphResetKey(graph: GraphResponse | null): string {
+  if (!graph) {
+    return 'empty'
+  }
+  return `${graph.rootCourse.code}:${graph.edges.length}:${graph.nodes.length}`
+}
+
 export function GraphCanvas({ graph }: GraphCanvasProps) {
+  return <GraphCanvasView key={graphResetKey(graph)} graph={graph} />
+}
+
+function GraphCanvasView({ graph }: GraphCanvasProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const helpRef = useRef<HTMLDivElement | null>(null)
   const networkRef = useRef<Network | null>(null)
@@ -561,107 +482,6 @@ export function GraphCanvas({ graph }: GraphCanvasProps) {
     setSelectedCourse(null)
     setPanelPhase('hidden')
   }
-
-  useEffect(() => {
-    hideCoursePanelImmediately()
-  }, [graph])
-
-  useEffect(() => {
-    return () => {
-      clearPanelTimers()
-    }
-  }, [])
-
-  useEffect(() => {
-    function handlePointerDown(event: MouseEvent) {
-      if (event.target instanceof globalThis.Node && !helpRef.current?.contains(event.target)) {
-        setShowHelp(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handlePointerDown)
-
-    return () => {
-      document.removeEventListener('mousedown', handlePointerDown)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!graph || !containerRef.current) {
-      return
-    }
-
-    let destroyed = false
-    const container = containerRef.current
-
-    void document.fonts.ready.then(() => {
-      if (destroyed || !container) return
-
-      const isMobile =
-        typeof window !== 'undefined' && window.matchMedia(MOBILE_GRAPH_QUERY).matches
-
-      // Keep render preprocessing deterministic: strip label-only relation nodes.
-      const simplifiedGraph = simplifyPrereqRelationNodes(graph)
-      const renderGraph = simplifiedGraph
-
-      const network = new Network(
-        container,
-        {
-          nodes: new DataSet(toVisNodes(renderGraph)),
-          edges: new DataSet(toVisEdges(renderGraph)),
-        },
-        getGraphOptions(isMobile),
-      )
-
-      networkRef.current = network
-
-      network.once('afterDrawing', () => {
-        network.fit({
-          animation: isMobile
-            ? false
-            : {
-                duration: 450,
-                easingFunction: 'easeInOutQuad',
-              },
-        })
-      })
-
-      network.on('click', (event) => {
-        const selectedNodeId = event.nodes[0]
-
-        if (!selectedNodeId) {
-          return
-        }
-
-        const node = graph.nodes.find((entry) => entry.id === selectedNodeId)
-
-        if (!node || (node.type !== 'course' && node.type !== 'requirement')) {
-          return
-        }
-
-        if (node.type === 'requirement') {
-          showCoursePanel({
-            code: 'Requirement',
-            title: node.label,
-            description: 'This prerequisite is a general requirement rather than a specific course in the catalog.',
-            catalogUrl: null,
-            error: null,
-          })
-          return
-        }
-
-        void openCourseDetails(node)
-      })
-    })
-
-    return () => {
-      destroyed = true
-      if (networkRef.current) {
-        networkRef.current.destroy()
-        networkRef.current = null
-      }
-    }
-  }, [graph])
 
   async function openCourseDetails(node: Extract<GraphNode, { type: 'course' }>) {
     if (node.isAvailable === false) {
@@ -729,6 +549,101 @@ export function GraphCanvas({ graph }: GraphCanvasProps) {
       })
     }
   }
+
+  useEffect(() => {
+    return () => {
+      clearPanelTimers()
+    }
+  }, [])
+
+  useEffect(() => {
+    function handlePointerDown(event: MouseEvent) {
+      if (event.target instanceof globalThis.Node && !helpRef.current?.contains(event.target)) {
+        setShowHelp(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown)
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!graph || !containerRef.current) {
+      return
+    }
+
+    let destroyed = false
+    const container = containerRef.current
+
+    void document.fonts.ready.then(() => {
+      if (destroyed || !container) return
+
+      const isMobile =
+        typeof window !== 'undefined' && window.matchMedia(MOBILE_GRAPH_QUERY).matches
+
+      const renderGraph = graph
+
+      const network = new Network(
+        container,
+        {
+          nodes: new DataSet(toVisNodes(renderGraph)),
+          edges: new DataSet(toVisEdges(renderGraph)),
+        },
+        getGraphOptions(isMobile),
+      )
+
+      networkRef.current = network
+
+      network.once('afterDrawing', () => {
+        network.fit({
+          animation: isMobile
+            ? false
+            : {
+                duration: 450,
+                easingFunction: 'easeInOutQuad',
+              },
+        })
+      })
+
+      network.on('click', (event) => {
+        const selectedNodeId = event.nodes[0]
+
+        if (!selectedNodeId) {
+          return
+        }
+
+        const node = graph.nodes.find((entry) => entry.id === selectedNodeId)
+
+        if (!node || (node.type !== 'course' && node.type !== 'requirement')) {
+          return
+        }
+
+        if (node.type === 'requirement') {
+          showCoursePanel({
+            code: 'Requirement',
+            title: node.label,
+            description: 'General requirement as outlined in the prerequisite data.',
+            catalogUrl: null,
+            error: null,
+          })
+          return
+        }
+
+        void openCourseDetails(node)
+      })
+    })
+
+    return () => {
+      destroyed = true
+      if (networkRef.current) {
+        networkRef.current.destroy()
+        networkRef.current = null
+      }
+    }
+  }, [graph])
 
   function zoomIn() {
     const network = networkRef.current

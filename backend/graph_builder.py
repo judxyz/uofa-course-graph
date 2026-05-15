@@ -69,6 +69,48 @@ def normalize_course_code(code: str) -> str:
     return code.upper().replace("-", " ").strip()
 
 
+def is_relation_label_group(group: GroupRecord, resolved_group_type: str) -> bool:
+    """Return True when a group is only a pass-through PREREQ/COREQ label node."""
+    # Real AND/OR logic nodes are never pass-through labels, even when legacy data
+    # maps a single-item ALL_OF group to a PREREQ display type.
+    if group.group_type in {"ALL_OF", "ANY_OF"}:
+        return False
+
+    if resolved_group_type == "PREREQ":
+        return True
+
+    visual_style = (group.visual_style or "").strip().lower()
+    is_styled_coreq = visual_style in {"and", "or"}
+
+    if resolved_group_type == "COREQ":
+        return not is_styled_coreq
+
+    normalized_label = (group.display_label or "").strip().upper()
+    if normalized_label == "PREREQ":
+        return True
+
+    if normalized_label == "COREQ" and resolved_group_type in {"UNKNOWN", "COREQ"}:
+        return not is_styled_coreq
+
+    return False
+
+
+def is_redundant_root_and_wrapper(group: GroupRecord, visual_depth: int) -> bool:
+    """Return True for a root-level ALL_OF wrapper that only fans out to children."""
+    return visual_depth == 1 and group.group_type == "ALL_OF"
+
+
+def should_omit_visual_group_node(
+    group: GroupRecord,
+    resolved_group_type: str,
+    visual_depth: int,
+) -> bool:
+    """Return True when the group should not be emitted as a visual graph node."""
+    return is_relation_label_group(group, resolved_group_type) or is_redundant_root_and_wrapper(
+        group, visual_depth
+    )
+
+
 def ensure_requirement_item_schema(conn) -> None:
     """Allow graph reads to include unresolved requirement item codes."""
     with conn.cursor() as cur:
@@ -109,6 +151,7 @@ class GraphBuilder:
         self.items: list[dict[str, Any]] = []
 
         self._seen_edge_ids: set[str] = set()
+        self._seen_edge_keys: set[tuple[str, str, str]] = set()
         self._seen_group_ids: set[int] = set()
         self._seen_item_ids: set[int] = set()
         self._node_instance_counter = 0
@@ -258,7 +301,7 @@ class GraphBuilder:
         if course_depth >= self.max_depth:
             return
 
-        group_depth = depth + 1
+        group_visual_depth = depth + 1
         groups = self._fetch_groups_for_course(course.id)
 
         for group in groups:
@@ -268,15 +311,33 @@ class GraphBuilder:
             items = self._fetch_items_for_group(group.id)
             resolved_group_type = self._resolve_group_type(group, items)
 
-            group_node_id = self._add_group_node(group, depth=group_depth, group_type=resolved_group_type)
+            if should_omit_visual_group_node(group, resolved_group_type, group_visual_depth):
+                self._expand_group_children(
+                    group=group,
+                    attach_node_id=course_node_id,
+                    children_depth=group_visual_depth + 1,
+                    course_depth=course_depth,
+                    path=path,
+                )
+                continue
+
+            group_node_id = self._add_group_node(
+                group, depth=group_visual_depth, group_type=resolved_group_type
+            )
             self._add_course_to_group_edge(course_node_id, group_node_id, resolved_group_type)
-            self._expand_group_children(group, group_node_id, group_depth, course_depth, path)
+            self._expand_group_children(
+                group=group,
+                attach_node_id=group_node_id,
+                children_depth=group_visual_depth + 1,
+                course_depth=course_depth,
+                path=path,
+            )
 
     def _expand_group_children(
         self,
         group: GroupRecord,
-        group_node_id: str,
-        group_depth: int,
+        attach_node_id: str,
+        children_depth: int,
         course_depth: int,
         path: set[int],
     ) -> None:
@@ -291,11 +352,35 @@ class GraphBuilder:
                     continue
                 sub_items = self._fetch_items_for_group(subgroup.id)
                 resolved_sub_type = self._resolve_group_type(subgroup, sub_items)
+                subgroup_visual_depth = children_depth
+
+                if should_omit_visual_group_node(
+                    subgroup, resolved_sub_type, subgroup_visual_depth
+                ):
+                    self._expand_group_children(
+                        group=subgroup,
+                        attach_node_id=attach_node_id,
+                        children_depth=subgroup_visual_depth + 1,
+                        course_depth=course_depth,
+                        path=path,
+                    )
+                    continue
+
                 subgroup_node_id = self._add_group_node(
-                    subgroup, depth=group_depth + 1, group_type=resolved_sub_type
+                    subgroup, depth=subgroup_visual_depth, group_type=resolved_sub_type
                 )
-                self._add_group_to_subgroup_edge(group_node_id, subgroup_node_id, resolved_sub_type)
-                self._expand_group_children(subgroup, subgroup_node_id, group_depth + 1, course_depth, path)
+                self._add_node_to_node_edge(
+                    attach_node_id,
+                    subgroup_node_id,
+                    self._relation_type_for_group_link(resolved_sub_type),
+                )
+                self._expand_group_children(
+                    group=subgroup,
+                    attach_node_id=subgroup_node_id,
+                    children_depth=subgroup_visual_depth + 1,
+                    course_depth=course_depth,
+                    path=path,
+                )
         else:
             for item in items:
                 if item.relation_type == "COREQ" and not self.include_coreqs:
@@ -306,14 +391,13 @@ class GraphBuilder:
                 if item.required_course_id is None:
                     self._add_item(item)
                     item_node_id = (
-                        self._add_requirement_node(item, depth=group_depth + 1)
+                        self._add_requirement_node(item, depth=children_depth)
                         if item.requirement_text
-                        else self._add_unavailable_course_node(item, depth=group_depth + 1)
+                        else self._add_unavailable_course_node(item, depth=children_depth)
                     )
-                    self._add_group_to_course_edge(
-                        group_node_id,
+                    self._add_node_to_node_edge(
+                        attach_node_id,
                         item_node_id,
-                        item.id,
                         item.relation_type,
                     )
                     continue
@@ -322,8 +406,12 @@ class GraphBuilder:
                 if child_course is None:
                     continue
                 self._add_item(item)
-                child_course_node_id = self._add_course_node(child_course, depth=group_depth + 1)
-                self._add_group_to_course_edge(group_node_id, child_course_node_id, item.id, item.relation_type)
+                child_course_node_id = self._add_course_node(child_course, depth=children_depth)
+                self._add_node_to_node_edge(
+                    attach_node_id,
+                    child_course_node_id,
+                    item.relation_type,
+                )
                 if child_course.id in path:
                     continue
                 next_path = set(path)
@@ -331,7 +419,7 @@ class GraphBuilder:
                 self._expand_course(
                     child_course,
                     course_node_id=child_course_node_id,
-                    depth=group_depth + 1,
+                    depth=children_depth,
                     course_depth=child_course_depth,
                     path=next_path,
                 )
@@ -766,26 +854,19 @@ class GraphBuilder:
 
     def _resolve_group_type(self, group: GroupRecord, items: list[ItemRecord]) -> str:
         """Map stored group types to the frontend-visible group type."""
-        visible_items = [
-            item
-            for item in items
-            if self.include_coreqs or item.relation_type != "COREQ"
-        ]
-
-        # Legacy data may encode single-item ALL_OF groups that should render as
-        # direct prerequisite links instead of standalone AND groups.
-        if group.group_type == "ALL_OF" and len(visible_items) == 1:
-            return "PREREQ"
-
         return group.group_type
 
     def _resolve_group_label(self, group: GroupRecord, group_type: str) -> str | None:
         """Normalize emitted labels so legacy data matches current frontend wording."""
-        # Keep canonical labels so frontend simplification/styling can rely on stable values.
         if group_type in {"ALL_OF", "ANY_OF", "PREREQ", "COREQ"}:
             return group_type
 
         return group.display_label
+
+    @staticmethod
+    def _relation_type_for_group_link(resolved_group_type: str) -> str:
+        """Map a resolved group type to the edge relation used when linking graph nodes."""
+        return "COREQ" if resolved_group_type == "COREQ" else "PREREQ"
 
     def _add_course_node(self, course: CourseRecord, depth: int) -> str:
         """Add a unique course node instance and return its node id."""
@@ -869,12 +950,33 @@ class GraphBuilder:
 
     def _add_edge(self, edge: dict[str, Any]) -> None:
         """Add edge if not already present."""
+        source = edge["source"]
+        target = edge["target"]
+        if source == target:
+            return
+
+        edge_key = (source, target, edge["relationType"])
+        if edge_key in self._seen_edge_keys:
+            return
+
         edge_id = edge["id"]
         if edge_id in self._seen_edge_ids:
             return
 
         self.edges.append(edge)
         self._seen_edge_ids.add(edge_id)
+        self._seen_edge_keys.add(edge_key)
+
+    def _add_node_to_node_edge(self, source_node_id: str, target_node_id: str, relation_type: str) -> None:
+        """Add a deduplicated edge between two graph nodes."""
+        self._add_edge(
+            {
+                "id": self._next_edge_id("edge-node-node"),
+                "source": source_node_id,
+                "target": target_node_id,
+                "relationType": relation_type,
+            }
+        )
 
     def _add_course_to_group_edge(self, course_node_id: str, group_node_id: str, group_type: str) -> None:
         """Add root/parent course -> group edge."""
