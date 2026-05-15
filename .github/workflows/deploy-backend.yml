@@ -1,0 +1,72 @@
+name: Deploy backend (AWS SAM)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "template.yaml"
+      - ".github/workflows/deploy-backend.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-backend-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      SAM_STACK_NAME: ${{ vars.SAM_STACK_NAME }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check AWS deploy configuration
+        run: |
+          if [ -z "${{ secrets.AWS_DEPLOY_ROLE_ARN }}" ]; then
+            echo "Set repository Secret: AWS_DEPLOY_ROLE_ARN (GitHub OIDC IAM role ARN)"
+            exit 1
+          fi
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: aws-actions/setup-sam@v2
+        with:
+          version: 1.142.1
+
+      - name: Build
+        run: sam build --template-file template.yaml
+
+      - name: Deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CORS_EXTRA_ORIGINS: ${{ secrets.CORS_EXTRA_ORIGINS }}
+        run: |
+          if [ -z "${SAM_STACK_NAME}" ] || [ -z "${AWS_REGION}" ]; then
+            echo "Set repository Variables: AWS_REGION, SAM_STACK_NAME"
+            exit 1
+          fi
+          if [ -z "${DATABASE_URL}" ]; then
+            echo "Set repository Secret: DATABASE_URL (PostgreSQL URL for Lambda)"
+            exit 1
+          fi
+          DEFAULT_CORS="https://uofa-prereq-graph.vercel.app"
+          CORS="${CORS_EXTRA_ORIGINS:-$DEFAULT_CORS}"
+          sam deploy \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --resolve-s3 \
+            --stack-name "${SAM_STACK_NAME}" \
+            --region "${AWS_REGION}" \
+            --capabilities CAPABILITY_IAM \
+            --parameter-overrides \
+              "DatabaseUrl=${DATABASE_URL}" \
+              "CorsExtraOrigins=${CORS}"

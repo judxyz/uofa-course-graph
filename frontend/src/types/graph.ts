@@ -1,6 +1,5 @@
 import type { CourseSummary, ParseStatus, RootCourse } from './course'
 
-export type NodeType = 'course' | 'group' | 'requirement'
 export type GroupType = 'ANY_OF' | 'ALL_OF' | 'COREQ' | 'UNKNOWN'
 export type RelationType = 'PREREQ' | 'COREQ'
 export type GraphViewMode = 'prereq' | 'dependency'
@@ -49,7 +48,7 @@ export interface GraphItem {
 
 export interface BaseNode {
   id: string
-  type: NodeType
+  type: 'course' | 'group' | 'requirement'
   depth: number
 }
 
@@ -97,83 +96,4 @@ export interface GraphResponse {
   rawPrerequisiteText: string | null
   rawCorequisiteText: string | null
   meta: GraphMeta
-}
-
-export interface LayoutNodeDataMap {
-  course: CourseNode
-  group: GroupNode
-  requirement: RequirementNode
-}
-
-interface BaseLayoutHierarchyNode<TType extends NodeType> {
-  id: string
-  originalNodeId: string
-  type: TType
-  depth: number
-  data: LayoutNodeDataMap[TType]
-  relationTypeFromParent?: RelationType
-  children: LayoutHierarchyNode[]
-  isReference?: boolean
-}
-
-export interface LayoutHierarchyCourseNode extends BaseLayoutHierarchyNode<'course'> {
-  type: 'course'
-}
-
-export interface LayoutHierarchyGroupNode extends BaseLayoutHierarchyNode<'group'> {
-  type: 'group'
-}
-
-export interface LayoutHierarchyRequirementNode extends BaseLayoutHierarchyNode<'requirement'> {
-  type: 'requirement'
-}
-
-export type LayoutHierarchyNode =
-  | LayoutHierarchyCourseNode
-  | LayoutHierarchyGroupNode
-  | LayoutHierarchyRequirementNode
-
-export interface LayoutConfig {
-  levelGap: number
-  siblingGap: number
-  marginX: number
-  marginY: number
-}
-
-interface BasePositionedNode<TType extends NodeType> {
-  id: string
-  originalNodeId: string
-  type: TType
-  x: number
-  y: number
-  depth: number
-  data: LayoutNodeDataMap[TType]
-  isReference?: boolean
-}
-
-export type PositionedNode =
-  | BasePositionedNode<'course'>
-  | BasePositionedNode<'group'>
-  | BasePositionedNode<'requirement'>
-
-export interface PositionedLink {
-  id: string
-  sourceId: string
-  targetId: string
-  source: {
-    x: number
-    y: number
-  }
-  target: {
-    x: number
-    y: number
-  }
-  relationType: RelationType
-}
-
-export interface LayoutResult {
-  nodes: PositionedNode[]
-  links: PositionedLink[]
-  width: number
-  height: number
 }

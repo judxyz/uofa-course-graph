@@ -1,6 +1,16 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 
+Parameters:
+  DatabaseUrl:
+    Type: String
+    NoEcho: true
+    Description: PostgreSQL connection string (DATABASE_URL) for the Lambda function.
+  CorsExtraOrigins:
+    Type: String
+    Default: "https://uofa-prereq-graph.vercel.app"
+    Description: Extra CORS origins (comma-separated), merged in app.py with defaults.
+
 Resources:
   UofAPrereqApi:
     Type: AWS::Serverless::Function
@@ -12,8 +22,8 @@ Resources:
       Timeout: 30
       Environment:
         Variables:
-          DATABASE_URL: "replace-this-in-aws-console-after-deploy"
-          CORS_EXTRA_ORIGINS: "https://uofa-prereq-graph.vercel.app"
+          DATABASE_URL: !Ref DatabaseUrl
+          CORS_EXTRA_ORIGINS: !Ref CorsExtraOrigins
       Events:
         Api:
           Type: HttpApi

@@ -925,17 +925,6 @@ a:focus-visible {
   color: var(--text-muted);
 }
 
-.course-panel-pill {
-  display: inline-flex;
-  width: fit-content;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: rgba(39, 93, 56, 0.08);
-  color: var(--accent);
-  font-size: 0.88rem;
-  font-weight: 600;
-}
-
 .vis-network:focus {
   outline: none;
 }
