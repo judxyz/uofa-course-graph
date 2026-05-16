@@ -36,6 +36,18 @@ def _cors_allow_origins() -> list[str]:
 
 app = FastAPI(title="CMPUT Prerequisite Graph API")
 
+DEFAULT_GRAPH_COURSE = "CMPUT 267"
+
+
+@app.get("/")
+def root():
+    """Identify the API and the course code shown when the web app opens at /."""
+    return {
+        "service": "cmput-prereq-api",
+        "default_course": DEFAULT_GRAPH_COURSE,
+    }
+
+
 app.add_middleware(
     CORSMiddleware,
     # Deployed + local Vite; add LAN dev via CORS_EXTRA_ORIGINS (comma-separated).

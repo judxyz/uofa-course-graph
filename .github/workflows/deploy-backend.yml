@@ -4,7 +4,8 @@ on:
   push:
     branches: [main]
     paths:
-      - "backend/**"
+      - "uofa-prereq-graph/**"
+      - "requirements.txt"
       - "template.yaml"
       - ".github/workflows/deploy-backend.yml"
   workflow_dispatch:
@@ -43,7 +44,9 @@ jobs:
           version: 1.142.1
 
       - name: Build
-        run: sam build --template-file template.yaml
+        run: |
+          cp requirements.txt uofa-prereq-graph/requirements.txt
+          sam build --template-file template.yaml
 
       - name: Deploy
         env:

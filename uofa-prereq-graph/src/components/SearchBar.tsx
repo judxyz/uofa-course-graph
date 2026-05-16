@@ -151,7 +151,7 @@ export function SearchBar({ onSelectCourse, initialValue = '' }: SearchBarProps)
               setIsOpen(true)
             }}
             onFocus={() => setIsOpen(true)}
-            placeholder="eg. CMPUT 272"
+            placeholder="eg. CMPUT 267"
             aria-label="Search for a course code"
             aria-expanded={isOpen}
             aria-controls="course-search-results"

@@ -1,62 +1,73 @@
 ## UofA Prereq Graph
 
-This project is an interactive prerequisite and dependency graph explorer for University of Alberta courses.
+Interactive prerequisite and dependency graph explorer for University of Alberta courses.
+
+## Repository layout
+
+| Path | Purpose |
+|------|---------|
+| `uofa-prereq-graph/` | Web app (React + Vite) and API (FastAPI) in one project |
+| `scraper/` | Catalogue scraper, JSON export, and database import scripts |
+| `template.yaml` | AWS SAM template for API deployment |
+
+The graph app keeps Python and TypeScript together under `uofa-prereq-graph/` (not separate `frontend/` / `backend/` folders). The scraper lives separately because it is an offline data pipeline.
 
 ## Stack
 
-- Frontend: React + TypeScript + Vite + vis.js (`frontend/`)
-- Backend: FastAPI + psycopg (`backend/`)
-- Data source: Parsed UAlberta course catalogue
-- Database: Supabase, PostgreSQL
+- **App:** React, TypeScript, Vite, vis-network, FastAPI, psycopg
+- **Data:** Parsed UAlberta course catalogue in PostgreSQL (Supabase)
+- **Deploy:** Vercel (web), AWS Lambda via SAM (API)
 
-See `backend/README.md` and `frontend/README.md`
+See `uofa-prereq-graph/README.md` and `scraper/README.md` for details.
 
+## Local development
 
-## Project Layout
+### Python (API + scraper)
 
-- `frontend/` web UI, graph rendering, API clients
-- `backend/` API, graph payload builder, scraper/import scripts
-
-## Local Development
-
-### 1) Backend
-
-1. Create and activate a Python virtual environment.
+1. Create and activate a Python virtual environment at the repo root.
 2. Install dependencies:
-   - `pip install -r backend/requirements.txt`
-3. Set environment variable:
-   - `DATABASE_URL=postgresql://...`
-4. Start API (listen on your LAN so other devices can reach it):
-   - `cd backend`
-   - `uvicorn app:app --reload --host 0.0.0.0 --port 8000`
+   ```bash
+   pip install -r requirements.txt
+   ```
+   For tests: `pip install -r requirements-dev.txt`
 
-### Phone or tablet on the same Wi‑Fi
+### API
+3. Set `DATABASE_URL=postgresql://...` (e.g. in a repo-root `.env`).
+4. Start the API (LAN-friendly for phone testing):
+   ```bash
+   cd uofa-prereq-graph
+   uvicorn app:app --reload --host 0.0.0.0 --port 8000
+   ```
 
-1. **Open the frontend URL**, not the API port: `http://YOUR_PC_LAN_IP:5173`. Port `8000` is JSON only unless you deploy a combined setup.
-2. **Frontend env** (so the phone calls your PC, not `localhost` on the device):
-   - Set `VITE_API_BASE_URL=http://YOUR_PC_LAN_IP:8000` (same IP as above).
-   - Restart `npm run dev -- --host` after changing env files.
-3. **Backend CORS**: add to your `.env` (same file as `DATABASE_URL`):
-   - `CORS_EXTRA_ORIGINS=http://YOUR_PC_LAN_IP:5173`
-   - Restart uvicorn after editing.
-4. If it still fails, allow **port 8000** (and **5173** if blocked) in **Windows Firewall** for private networks.
-
-### 2) Frontend
+### Web UI
 
 1. Install dependencies:
-   - `cd frontend`
-   - `npm install`
-2. Start dev server (reachable on LAN):
-   - `npm run dev -- --host`
+   ```bash
+   cd uofa-prereq-graph
+   npm install
+   ```
+2. Start the dev server:
+   ```bash
+   npm run dev -- --host
+   ```
+3. Open `http://localhost:5173` (or your machine’s LAN IP on port 5173).
 
+For a phone on the same Wi‑Fi, set `VITE_API_BASE_URL=http://YOUR_PC_LAN_IP:8000` in `uofa-prereq-graph/.env.development.local` and add `CORS_EXTRA_ORIGINS=http://YOUR_PC_LAN_IP:5173` for the API. See the app README for more.
 
-## API Overview
+### Scraper (optional)
 
-- `GET /health` basic API health payload
-- `GET /courses` list course code/title entries
-- `GET /courses/{code}` fetch one course details object
-- `GET /graph/{code}` fetch graph payload
-  - Query params:
-    - `max_depth` integer, course-depth limit in prerequisite mode
-    - `include_coreqs` boolean, include corequisites in prerequisite mode
-    - `view` one of `prereq` or `dependency`
+From `scraper/` (after installing root `requirements.txt`):
+
+```bash
+python scraper.py              # write data/data_courses.json
+python add_to_db.py            # load JSON into DATABASE_URL
+# or
+python run_scrape_add.py       # scrape + load in one step
+```
+
+## API overview
+
+- `GET /health` — health check
+- `GET /courses` — list course codes and titles
+- `GET /courses/{code}` — one course record
+- `GET /graph/{code}` — graph payload (`max_depth`, `include_coreqs`, `view=prereq|dependency`)

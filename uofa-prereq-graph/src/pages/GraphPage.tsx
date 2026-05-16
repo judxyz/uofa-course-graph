@@ -3,12 +3,21 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { GraphCanvas } from '../components/GraphCanvas'
 import { SearchBar } from '../components/SearchBar'
 import { useCourseGraph } from '../hooks/useCourseGraph'
-import { formatCourseCodeForDisplay, formatCourseCodeForRoute } from '../lib/courseCode'
+import {
+  DEFAULT_GRAPH_COURSE_DISPLAY,
+  formatCourseCodeForDisplay,
+  formatCourseCodeForRoute,
+} from '../lib/courseCode'
 
 const COURSE_DEPTH_OPTIONS = [1, 2, 3, 4]
 
+function courseCodeFromRouteParam(code: string | undefined) {
+  const raw = (code ?? '').trim()
+  return raw ? formatCourseCodeForDisplay(raw) : DEFAULT_GRAPH_COURSE_DISPLAY
+}
+
 export function GraphPage() {
-  const { code = '' } = useParams()
+  const { code } = useParams()
   const navigate = useNavigate()
   const [isDepthMenuOpen, setIsDepthMenuOpen] = useState(false)
   const depthFilterRef = useRef<HTMLDivElement | null>(null)
@@ -23,10 +32,10 @@ export function GraphPage() {
     setMaxDepth,
     setIncludeCoreqs,
     setViewMode,
-  } = useCourseGraph(formatCourseCodeForDisplay(code))
+  } = useCourseGraph(courseCodeFromRouteParam(code))
 
   useEffect(() => {
-    setSelectedCourseCode(formatCourseCodeForDisplay(code))
+    setSelectedCourseCode(courseCodeFromRouteParam(code))
   }, [code, setSelectedCourseCode])
 
   useEffect(() => {

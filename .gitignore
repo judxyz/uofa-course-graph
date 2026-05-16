@@ -26,8 +26,9 @@ dist-ssr
 .env
 __pycache__/
 node_modules/
-frontend/.env.production
+uofa-prereq-graph/.env.development.local
 .aws-sam/
-backend/data/data_courses.json
+scraper/data/data_courses.json
+uofa-prereq-graph/requirements.txt
 venv/
 .venv/

@@ -26,6 +26,10 @@ const PREREQ_COLOR_BG = '#752020'
 
 const MOBILE_GRAPH_QUERY = '(max-width: 720px), (pointer: coarse)'
 const UI_FONT_FAMILY = 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+const ZOOM_BUTTON_ANIMATION = {
+  duration: 400,
+  easingFunction: 'easeInOutQuad' as const,
+}
 
 const baseGraphOptions: Options = {
   autoResize: true,
@@ -92,7 +96,7 @@ function getGraphOptions(isMobile: boolean): Options {
       // Hover hit-testing is expensive on touch devices and not useful there.
       hover: isMobile ? false : interaction.hover,
       tooltipDelay: isMobile ? 240 : 120,
-      zoomSpeed: isMobile ? 0.7 : 1,
+      zoomSpeed: isMobile ? 0.7 : 0.3,
     },
   }
 }
@@ -450,7 +454,7 @@ function GraphCanvasView({ graph }: GraphCanvasProps) {
   const [selectedCourse, setSelectedCourse] = useState<SelectedCourseState | null>(null)
   const [panelPhase, setPanelPhase] = useState<'hidden' | 'open'>('hidden')
   const [showHelp, setShowHelp] = useState(false)
-  const [showLegend, setShowLegend] = useState(true)
+  const [showLegend, setShowLegend] = useState(false)
 
   function clearPanelTimers() {
     if (panelOpenFrameRef.current !== null) {
@@ -653,8 +657,8 @@ function GraphCanvasView({ graph }: GraphCanvasProps) {
     }
 
     network.moveTo({
-      scale: network.getScale() * 1.15,
-      animation: true,
+      scale: network.getScale() * 1.4,
+      animation: ZOOM_BUTTON_ANIMATION,
     })
   }
 
@@ -666,8 +670,8 @@ function GraphCanvasView({ graph }: GraphCanvasProps) {
     }
 
     network.moveTo({
-      scale: network.getScale() / 1.15,
-      animation: true,
+      scale: network.getScale() / 1.4,
+      animation: ZOOM_BUTTON_ANIMATION,
     })
   }
 
@@ -703,15 +707,54 @@ function GraphCanvasView({ graph }: GraphCanvasProps) {
           ref={helpRef}
           className={`graph-help-control ${showHelp ? 'graph-help-control--overlay-open' : ''}`}
         >
-          <button
-            type="button"
-            className="graph-help-button"
-            aria-expanded={showHelp}
-            aria-controls="graph-help-popover"
-            onClick={() => setShowHelp((open) => !open)}
-          >
-            How to use
-          </button>
+          <div className="graph-help-legend-row">
+            
+            <div className={`graph-legend-drawer ${showLegend ? 'graph-legend-drawer--open' : ''}`}>
+              <button
+                type="button"
+                className="graph-legend-tab"
+                aria-expanded={showLegend}
+                aria-controls="graph-legend-panel"
+                onClick={() => setShowLegend((open) => !open)}
+              >
+                <span className="graph-legend-tab-label">Legend</span>
+              </button>
+              {showLegend ? (
+                <aside id="graph-legend-panel" className="graph-legend" aria-label="Graph legend">
+                  <div className="graph-legend-header">
+                    <p className="graph-legend-title">Legend</p>
+                  </div>
+                  <div className="graph-legend-list">
+                    <p className="graph-legend-item">
+                      <span className="graph-legend-swatch graph-legend-swatch--red" aria-hidden="true" />
+                      <span>All of</span>
+                    </p>
+                    <p className="graph-legend-item">
+                      <span className="graph-legend-swatch graph-legend-swatch--blue" aria-hidden="true" />
+                      <span>Any of</span>
+                    </p>
+                    <p className="graph-legend-item">
+                      <span className="graph-legend-line graph-legend-line--solid" aria-hidden="true" />
+                      <span>Prerequisite</span>
+                    </p>
+                    <p className="graph-legend-item">
+                      <span className="graph-legend-line graph-legend-line--dotted" aria-hidden="true" />
+                      <span>Corequisite</span>
+                    </p>
+                  </div>
+                </aside>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              className="graph-help-button"
+              aria-expanded={showHelp}
+              aria-controls="graph-help-popover"
+              onClick={() => setShowHelp((open) => !open)}
+            >
+              How to use?
+            </button>
+          </div>
           {showHelp ? (
             <section
               id="graph-help-popover"
@@ -732,29 +775,39 @@ function GraphCanvasView({ graph }: GraphCanvasProps) {
                 >
                   ×
                 </button>
-                <p
-                >
-                Hello! This web app is a tool to simplify the process of searching for course prerequisites at the University of Alberta through visualizing dependencies in a graph.
-                <br />
-                <br />
-                The graph can be utilized in two ways:
-                <br />
-                <br />
-                1. Prerequisite View: 
-                <br />
-                Search any course to view its prerequisites (and corequisites). Clicking on a course opens a popup to view its details and allow you to navigate directly to the course catalogue page. The depth filter controls the level of courses that are displayed - '1 level' means only the immediate prerequisites are displayed. Blue line means that taking any of these courses will fulfill the requirement, while red line means that all of those courses must be taken in order to fulfill the requirement. Prerequisite courses are indicated with a solid line and corequisite courses are indicated with a dotted line.
-                <br />
-                <br />
-                2. Dependency View:
-                <br />
-                Search any course to view all other courses that require having previously taken the searched course. All courses displayed in red depend on the searched course at its root as a prerequisite. This view is helpful as a tool to figure out the order in which courses must be taken.
-                <br />
-                <br />
-                Note: This is a personal project and is not affiliated with the University of Alberta.
-                <br />
-                Data is sourced from the University of Alberta's course catalogue: https://apps.ualberta.ca/catalogue/courses/
-                <br />
-
+                <p>
+                  Hello! This web app is a tool to simplify the process of searching for course
+                  prerequisites at the University of Alberta through visualizing dependencies in a graph.
+                  <br />
+                  <br />
+                  The graph can be utilized in two ways:
+                  <br />
+                  <br />
+                  1. Prerequisite View:
+                  <br />
+                  Search any course to view its prerequisites (and corequisites). Clicking on a course
+                  opens a popup to view its details and allow you to navigate directly to the course
+                  catalogue page. The depth filter controls the level of courses that are displayed -
+                  &apos;1 level&apos; means only the immediate prerequisites are displayed. Blue line
+                  means that taking any of these courses will fulfill the requirement, while red line
+                  means that all of those courses must be taken in order to fulfill the requirement.
+                  Prerequisite courses are indicated with a solid line and corequisite courses are
+                  indicated with a dotted line.
+                  <br />
+                  <br />
+                  2. Dependency View:
+                  <br />
+                  Search any course to view all other courses that require having previously taken the
+                  searched course. All courses displayed in red depend on the searched course at its root
+                  as a prerequisite. This view is helpful as a tool to figure out the order in which
+                  courses must be taken.
+                  <br />
+                  <br />
+                  Note: This is a personal project and is not affiliated with the University of Alberta.
+                  <br />
+                  Data is sourced from the University of Alberta&apos;s course catalogue:
+                  https://apps.ualberta.ca/catalogue/courses/
+                  <br />
                 </p>
                 <a
                   href="https://github.com/judxyz/ua-prereq"
@@ -767,51 +820,6 @@ function GraphCanvasView({ graph }: GraphCanvasProps) {
               </div>
             </section>
           ) : null}
-          <div className={`graph-legend-drawer ${showLegend ? 'graph-legend-drawer--open' : ''}`}>
-            <button
-              type="button"
-              className="graph-legend-tab"
-              aria-expanded={showLegend}
-              aria-controls="graph-legend-panel"
-              onClick={() => setShowLegend((open) => !open)}
-            >
-              <span className="graph-legend-tab-label">Legend</span>
-            </button>
-            {showLegend ? (
-              <aside id="graph-legend-panel" className="graph-legend" aria-label="Graph legend">
-                <div className="graph-legend-header">
-                  <p className="graph-legend-title">Legend</p>
-                  <button
-                    type="button"
-                    className="graph-legend-close"
-                    onClick={() => setShowLegend(false)}
-                    aria-label="Close legend"
-                    title="Close legend"
-                  >
-                    ×
-                  </button>
-                </div>
-                <div className="graph-legend-row">
-                  <p className="graph-legend-item">
-                    <span className="graph-legend-swatch graph-legend-swatch--red" aria-hidden="true" />
-                    <span>All of</span>
-                  </p>
-                  <p className="graph-legend-item">
-                    <span className="graph-legend-swatch graph-legend-swatch--blue" aria-hidden="true" />
-                    <span>Any of</span>
-                  </p>
-                </div>
-                <p className="graph-legend-item">
-                  <span className="graph-legend-line graph-legend-line--solid" aria-hidden="true" />
-                  <span>Prerequisite</span>
-                </p>
-                <p className="graph-legend-item">
-                  <span className="graph-legend-line graph-legend-line--dotted" aria-hidden="true" />
-                  <span>Corequisite</span>
-                </p>
-              </aside>
-            ) : null}
-          </div>
         </div>
 
         {selectedCourse ? (

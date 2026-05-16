@@ -2,6 +2,6 @@ fastapi
 uvicorn[standard]
 psycopg[binary]
 python-dotenv
+mangum
 requests
 beautifulsoup4
-mangum

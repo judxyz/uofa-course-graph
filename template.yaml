@@ -15,7 +15,7 @@ Resources:
   UofAPrereqApi:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: backend/
+      CodeUri: uofa-prereq-graph/
       Handler: app.handler
       Runtime: python3.12
       MemorySize: 512

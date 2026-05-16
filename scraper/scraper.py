@@ -17,7 +17,8 @@ FALLBACK_CATALOG_SUBJECTS = ["ai", "astro", "bioin", "biol", "bioph", "bot", "ch
 
 CATALOG_URL = "https://apps.ualberta.ca/catalogue/course/"
 BASE_URL = "https://apps.ualberta.ca"
-OUTPUT_PATH = Path("backend/data/data_courses.json")
+_DATA_DIR = Path(__file__).resolve().parent / "data"
+OUTPUT_PATH = _DATA_DIR / "data_courses.json"
 
 @dataclass
 class RawCourse:

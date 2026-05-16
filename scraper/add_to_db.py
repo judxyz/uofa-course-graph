@@ -11,7 +11,7 @@ import psycopg
 
 load_dotenv()
 
-INPUT_PATH = Path("backend/data/data_courses.json")
+INPUT_PATH = Path(__file__).resolve().parent / "data" / "data_courses.json"
 
 UPSERT_SQL = """
 INSERT INTO courses (
