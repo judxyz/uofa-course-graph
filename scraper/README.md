@@ -26,12 +26,6 @@ pip install -r requirements.txt
 ## Usage
 
 ```bash
-# Scrape only (writes data/data_courses.json)
-python scraper.py
-
-# Load existing JSON
-python add_to_db.py
-
 # Scrape + load
 python run_scrape_add.py
 ```

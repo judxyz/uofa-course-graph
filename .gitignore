@@ -26,6 +26,8 @@ dist-ssr
 .env
 __pycache__/
 node_modules/
+node_modules.bak/
+uofa-prereq-graph/.tmp/
 uofa-prereq-graph/.env.development.local
 .aws-sam/
 scraper/data/data_courses.json

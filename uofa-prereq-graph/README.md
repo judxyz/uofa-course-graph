@@ -53,6 +53,7 @@ npm run dev -- --host
 
 - **Vercel:** set the project root directory to `uofa-prereq-graph` (includes `vercel.json`).
 - **AWS Lambda:** root `template.yaml` packages this folder; copy root `requirements.txt` here before `sam build` (CI does this automatically). `.samignore` excludes Node/Vite files from the Lambda artifact.
+- **GitHub Actions:** see repo root [README — Deploy API](../README.md#deploy-api-github-actions). Required secrets: `DATABASE_URL`, `AWS_DEPLOY_ROLE_ARN`.
 
 ## UI behavior
 
