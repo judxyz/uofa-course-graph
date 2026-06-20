@@ -1,38 +1,16 @@
-name: Keep Supabase awake
+name: Keep Supabase Active
 
 on:
   schedule:
-    # 12:00 UTC on days 1, 6, 11, 16, 21, 26, 31 (~every 5 days)
-    - cron: '0 12 */5 * *'
-  workflow_dispatch:
-
-permissions:
-  contents: read
+    - cron: '0 12 * * 1,4' # Runs every Monday and Thursday at 12:00 UTC
+  workflow_dispatch: # Allows manual triggering from the UI
 
 jobs:
-  ping-db:
+  ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping PostgreSQL
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      - name: Query Supabase REST API
         run: |
-          set -euo pipefail
-
-          if [ -z "${DATABASE_URL}" ]; then
-            echo "::error::Missing repository Secret: DATABASE_URL"
-            exit 1
-          fi
-
-          pip install 'psycopg[binary]'
-          python - <<'PY'
-          import os
-
-          import psycopg
-
-          with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
-              with conn.cursor() as cur:
-                  cur.execute("SELECT 1")
-
-          print("Database ping OK")
-          PY
+          curl -X GET "${{ secrets.SUPABASE_URL }}/rest/v1/rpc/version" \
+          -H "apikey: ${{ secrets.SUPABASE_KEY }}" \
+          -H "Authorization: Bearer ${{ secrets.SUPABASE_KEY }}"
