@@ -27,27 +27,6 @@ Browser (React) → FastAPI (Lambda/local) → PostgreSQL
 | `src/hooks/useCourseGraph.ts` | Fetch + view state |
 | `src/api/` | HTTP wrappers |
 
-## Environment
-
-| Variable | Required | Purpose |
-|----------|----------|---------|
-| `DATABASE_URL` | Yes (API) | Postgres connection |
-| `CORS_EXTRA_ORIGINS` | No | Extra CORS origins (comma-separated) |
-| `VITE_API_BASE_URL` | No | API URL for frontend (default `http://localhost:8000`) |
-
-## Local dev
-
-```bash
-# API (from uofa-course-graph/)
-pip install -r ../requirements.txt
-uvicorn app:app --reload --host 0.0.0.0 --port 8000
-
-# UI
-cd uofa-course-graph && npm install && npm run dev -- --host
-```
-
-Default course: **CMPUT 267** (`GET /` → `default_course`).
-
 ## API
 
 | Method | Path | Description |
