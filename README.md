@@ -57,6 +57,7 @@ python run_scrape_add.py       # scrape + load in one step
 - `GET /courses/{code}` — one course record
 - `GET /graph/{code}` — graph payload (`max_depth`, `include_coreqs`, `view=prereq|dependency`)
 
+<<<<<<< Updated upstream
 ## Deploy API (GitHub Actions)
 
 Workflow: [`.github/workflows/deploy-backend.yml`](.github/workflows/deploy-backend.yml). Runs on pushes to `main` that change API/SAM files, or manually via **Actions → Deploy backend (AWS SAM) → Run workflow**.
@@ -88,3 +89,5 @@ Set secrets/variables under **GitHub repo → Settings → Secrets and variables
 5. Run the workflow (or push an API change). After success, read stack output **ApiUrl** in CloudFormation and set `VITE_API_BASE_URL` on Vercel to that URL.
 
 Frontend-only changes under `uofa-course-graph/src/` do not trigger this workflow.
+=======
+>>>>>>> Stashed changes
