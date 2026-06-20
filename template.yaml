@@ -8,14 +8,14 @@ Parameters:
     Description: PostgreSQL connection string (DATABASE_URL) for the Lambda function.
   CorsExtraOrigins:
     Type: String
-    Default: "https://uofa-prereq-graph.vercel.app"
+    Default: "https://uofa-course-graph.vercel.app"
     Description: Extra CORS origins (comma-separated), merged in app.py with defaults.
 
 Resources:
   UofAPrereqApi:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: uofa-prereq-graph/
+      CodeUri: uofa-course-graph/
       Handler: app.handler
       Runtime: python3.12
       MemorySize: 512

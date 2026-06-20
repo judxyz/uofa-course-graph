@@ -15,14 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: uofa-prereq-graph
+        working-directory: uofa-course-graph
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: uofa-prereq-graph/package-lock.json
+          cache-dependency-path: uofa-course-graph/package-lock.json
       - run: npm ci
       - run: npm run lint
       - run: npm run test
@@ -41,9 +41,9 @@ jobs:
           cache-dependency-path: requirements.txt
       - run: pip install -r requirements.txt
       - run: python -m compileall -q .
-        working-directory: uofa-prereq-graph
+        working-directory: uofa-course-graph
       - run: python -c "from app import handler; print('handler:', type(handler).__name__)"
-        working-directory: uofa-prereq-graph
+        working-directory: uofa-course-graph
 
   scraper:
     runs-on: ubuntu-latest
@@ -69,6 +69,6 @@ jobs:
       - uses: aws-actions/setup-sam@v2
         with:
           version: 1.142.1
-      - run: cp requirements.txt uofa-prereq-graph/requirements.txt
+      - run: cp requirements.txt uofa-course-graph/requirements.txt
       - run: sam validate --template-file template.yaml
       - run: sam build --template-file template.yaml

@@ -11,11 +11,11 @@ Browser (React) → FastAPI (Lambda/local) → PostgreSQL
 
 | Layer | Tech | Deploy |
 |-------|------|--------|
-| UI | React 19, TypeScript, Vite, vis-network | Vercel (`uofa-prereq-graph/`) |
+| UI | React 19, TypeScript, Vite, vis-network | Vercel (`uofa-course-graph/`) |
 | API | FastAPI, psycopg, Mangum | AWS Lambda (`template.yaml`) |
 | DB | PostgreSQL | Supabase |
 
-## Structure (`uofa-prereq-graph/`)
+## Structure (`uofa-course-graph/`)
 
 | Path | Role |
 |------|------|
@@ -38,12 +38,12 @@ Browser (React) → FastAPI (Lambda/local) → PostgreSQL
 ## Local dev
 
 ```bash
-# API (from uofa-prereq-graph/)
+# API (from uofa-course-graph/)
 pip install -r ../requirements.txt
 uvicorn app:app --reload --host 0.0.0.0 --port 8000
 
 # UI
-cd uofa-prereq-graph && npm install && npm run dev -- --host
+cd uofa-course-graph && npm install && npm run dev -- --host
 ```
 
 Default course: **CMPUT 267** (`GET /` → `default_course`).
@@ -88,7 +88,7 @@ Expansion uses `max_depth` on courses only, with cycle protection. Code lookup: 
 
 ## Deploy
 
-- **Frontend:** Vercel, root `uofa-prereq-graph`, set `VITE_API_BASE_URL` to Lambda URL.
+- **Frontend:** Vercel, root `uofa-course-graph`, set `VITE_API_BASE_URL` to Lambda URL.
 - **API:** GitHub Actions `deploy-backend.yml` — secrets `DATABASE_URL`, `AWS_DEPLOY_ROLE_ARN`. Handler `app.handler`, Python 3.12.
 
 ## CI

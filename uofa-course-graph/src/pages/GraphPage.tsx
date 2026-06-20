@@ -58,7 +58,7 @@ export function GraphPage() {
         <div className="app-topbar-stack">
           <section className="app-topbar-shell">
             <div className="app-topbar-left">
-              <h1 className="app-title">UofA Prereq Graph </h1>
+              <h1 className="app-title">UofA Course Graph </h1>
               <h3 className="app-subtitle">
                 {viewMode === 'dependency' ? 'Dependency View' : 'Prerequisite View'}
               </h3>

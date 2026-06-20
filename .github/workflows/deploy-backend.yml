@@ -4,9 +4,9 @@ on:
   push:
     branches: [main]
     paths:
-      - "uofa-prereq-graph/app.py"
-      - "uofa-prereq-graph/graph_builder.py"
-      - "uofa-prereq-graph/.samignore"
+      - "uofa-course-graph/app.py"
+      - "uofa-course-graph/graph_builder.py"
+      - "uofa-course-graph/.samignore"
       - "requirements.txt"
       - "template.yaml"
       - ".github/workflows/deploy-backend.yml"
@@ -79,7 +79,7 @@ jobs:
 
       - name: Build
         run: |
-          cp requirements.txt uofa-prereq-graph/requirements.txt
+          cp requirements.txt uofa-course-graph/requirements.txt
           sam build --template-file template.yaml
 
       - name: Deploy
@@ -88,7 +88,7 @@ jobs:
           CORS_EXTRA_ORIGINS: ${{ secrets.CORS_EXTRA_ORIGINS }}
         run: |
           set -euo pipefail
-          DEFAULT_CORS="https://uofa-prereq-graph.vercel.app"
+          DEFAULT_CORS="https://uofa-course-graph.vercel.app"
           CORS="${CORS_EXTRA_ORIGINS:-$DEFAULT_CORS}"
           sam deploy \
             --no-confirm-changeset \

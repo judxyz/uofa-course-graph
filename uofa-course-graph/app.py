@@ -21,7 +21,7 @@ if not DATABASE_URL:
 
 def _cors_allow_origins() -> list[str]:
     origins = [
-        "https://uofa-prereq-graph.vercel.app",
+        "https://uofa-course-graph.vercel.app",
         "http://localhost:5173",
     ]
     extra = os.environ.get("CORS_EXTRA_ORIGINS", "")

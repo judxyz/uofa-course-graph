@@ -27,10 +27,10 @@ dist-ssr
 __pycache__/
 node_modules/
 node_modules.bak/
-uofa-prereq-graph/.tmp/
-uofa-prereq-graph/.env.development.local
+uofa-course-graph/.tmp/
+uofa-course-graph/.env.development.local
 .aws-sam/
 scraper/data/data_courses.json
-uofa-prereq-graph/requirements.txt
+uofa-course-graph/requirements.txt
 venv/
 .venv/

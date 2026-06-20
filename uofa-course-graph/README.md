@@ -1,4 +1,4 @@
-# UofA Prereq Graph (app)
+# UofA Course Graph (app)
 
 Single project folder for the course graph **web UI** and **API**. Python modules and the Vite/React app live side by side (no `frontend/` / `backend/` split).
 
@@ -15,7 +15,7 @@ Single project folder for the course graph **web UI** and **API**. Python module
 - **API (optional):** `CORS_EXTRA_ORIGINS` — comma-separated origins for LAN or staging
 - **Web:** `VITE_API_BASE_URL` — defaults to `http://localhost:8000` (set in `.env.development.local` for device testing)
 
-Load env from the repo root `.env` or `uofa-prereq-graph/.env` via `python-dotenv` in `app.py`.
+Load env from the repo root `.env` or `uofa-course-graph/.env` via `python-dotenv` in `app.py`.
 
 ## Run locally
 
@@ -51,7 +51,7 @@ npm run dev -- --host
 
 ## Deploy notes
 
-- **Vercel:** set the project root directory to `uofa-prereq-graph` (includes `vercel.json`).
+- **Vercel:** set the project root directory to `uofa-course-graph` (includes `vercel.json`).
 - **AWS Lambda:** root `template.yaml` packages this folder; copy root `requirements.txt` here before `sam build` (CI does this automatically). `.samignore` excludes Node/Vite files from the Lambda artifact.
 - **GitHub Actions:** see repo root [README — Deploy API](../README.md#deploy-api-github-actions). Required secrets: `DATABASE_URL`, `AWS_DEPLOY_ROLE_ARN`.
 

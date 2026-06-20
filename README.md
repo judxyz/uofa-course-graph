@@ -1,4 +1,4 @@
-## UofA Prereq Graph
+## UofA Course Graph
 
 Interactive prerequisite and dependency graph explorer for any course at the University of Alberta.
 
@@ -33,7 +33,7 @@ Technical docs: [docs/](docs/) — [data pipeline](docs/DATA_PIPELINE.md) and [a
 
 1. Install dependencies:
    ```bash
-   cd uofa-prereq-graph
+   cd uofa-course-graph
    npm install
    ```
 2. Start the dev server:
@@ -42,7 +42,7 @@ Technical docs: [docs/](docs/) — [data pipeline](docs/DATA_PIPELINE.md) and [a
    ```
 3. Open `http://localhost:5173`
 
-For a phone on the same Wi‑Fi, set `VITE_API_BASE_URL=http://YOUR_PC_LAN_IP:8000` in `uofa-prereq-graph/.env.development.local` and add `CORS_EXTRA_ORIGINS=http://YOUR_PC_LAN_IP:5173` for the API. See the app README for more.
+For a phone on the same Wi‑Fi, set `VITE_API_BASE_URL=http://YOUR_PC_LAN_IP:8000` in `uofa-course-graph/.env.development.local` and add `CORS_EXTRA_ORIGINS=http://YOUR_PC_LAN_IP:5173` for the API. See the app README for more.
 
 ### Scraper 
 
@@ -67,7 +67,7 @@ Workflow: [`.github/workflows/deploy-backend.yml`](.github/workflows/deploy-back
 |------|------|----------|--------|
 | Secret | `DATABASE_URL` | Yes | PostgreSQL URL for Lambda (`postgresql://...`) |
 | Secret | `AWS_DEPLOY_ROLE_ARN` | Yes | IAM role ARN for OIDC deploy (see below) |
-| Secret | `CORS_EXTRA_ORIGINS` | No | Defaults to `https://uofa-prereq-graph.vercel.app` |
+| Secret | `CORS_EXTRA_ORIGINS` | No | Defaults to `https://uofa-course-graph.vercel.app` |
 | Variable | `AWS_REGION` | No | Defaults to `us-east-1` |
 | Variable | `SAM_STACK_NAME` | No | Defaults to `uofa-prereq-api` |
 
@@ -87,4 +87,4 @@ Set secrets/variables under **GitHub repo → Settings → Secrets and variables
 
 5. Run the workflow (or push an API change). After success, read stack output **ApiUrl** in CloudFormation and set `VITE_API_BASE_URL` on Vercel to that URL.
 
-Frontend-only changes under `uofa-prereq-graph/src/` do not trigger this workflow.
+Frontend-only changes under `uofa-course-graph/src/` do not trigger this workflow.
