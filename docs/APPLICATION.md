@@ -1,6 +1,6 @@
 # Application — API & Web UI
 
-Read-only app: query PostgreSQL and render prerequisite / dependency graphs. Does not scrape.
+Application queries PostgreSQL and render prerequisite / dependency graphs.
 
 ```
 Browser (React) → FastAPI (Lambda/local) → PostgreSQL
@@ -85,26 +85,3 @@ Expansion uses `max_depth` on courses only, with cycle protection. Code lookup: 
 **Features:** search (`GET /courses`), depth filter (1–4), coreq toggle, prereq vs dependency view, node click → `GET /courses/{code}` for description.
 
 **Key modules:** `useCourseGraph` (loads graph on code/param change), `GraphCanvas` (hierarchical vis-network layout).
-
-## Deploy
-
-- **Frontend:** Vercel, root `uofa-course-graph`, set `VITE_API_BASE_URL` to Lambda URL.
-- **API:** GitHub Actions `deploy-backend.yml` — secrets `DATABASE_URL`, `AWS_DEPLOY_ROLE_ARN`. Handler `app.handler`, Python 3.12.
-
-## CI
-
-| Job | Checks |
-|-----|--------|
-| `app` | ESLint, Vitest, Vite build |
-| `api` | Python compile, handler import |
-| `scraper` | `pytest` |
-| `sam-build` | SAM validate + build |
-
-## Scripts
-
-| Command | Action |
-|---------|--------|
-| `npm run dev` | Vite dev server |
-| `npm run build` | Production build |
-| `npm run test` | Vitest |
-| `npm run lint` | ESLint |
