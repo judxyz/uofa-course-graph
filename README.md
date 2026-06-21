@@ -2,7 +2,7 @@
 
 Interactive prerequisite and dependency graph explorer for any course at the University of Alberta.
 
-Link: [uofa-course-graph.vercel.app](uofa-course-graph.vercel.app)
+Link: https://uofa-course-graph.vercel.app/
 
 ## Stack
 
