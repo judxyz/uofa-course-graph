@@ -32,7 +32,7 @@ def _cors_allow_origins() -> list[str]:
     return origins
 
 
-app = FastAPI(title="CMPUT Prerequisite Graph API")
+app = FastAPI(title="UofA Course Graph")
 
 DEFAULT_GRAPH_COURSE = "CMPUT 267"
 
@@ -41,7 +41,7 @@ DEFAULT_GRAPH_COURSE = "CMPUT 267"
 def root():
     """Identify the API and the course code shown when the web app opens at /."""
     return {
-        "service": "cmput-prereq-api",
+        "service": "uofa-course-graph-api",
         "default_course": DEFAULT_GRAPH_COURSE,
     }
 
@@ -70,7 +70,7 @@ def health():
     """Return a simple health status payload for the API."""
     return {
         "status": "ok",
-        "service": "cmput-prereq-api",
+        "service": "uofa-course-graph-api",
     }
 
 

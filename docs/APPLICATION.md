@@ -1,6 +1,6 @@
 # Application — API & Web UI
 
-Read-only app: query PostgreSQL and render prerequisite / dependency graphs. Does not scrape.
+This is the web application and API. It renders graphs, data is queried from PostgreSQL
 
 ```
 Browser (React) → FastAPI (Lambda/local) → PostgreSQL

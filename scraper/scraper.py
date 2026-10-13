@@ -75,7 +75,7 @@ def extract_requirement_section(text: str, label: str) -> Optional[str]:
 def extract_prereq_text(text: str) -> Optional[str]:
     """Extract prerequisite text when it contains course-like codes."""
     prereq_text = extract_requirement_section(text, "Prerequisite")
-
+    
     if not prereq_text:
         return None
 

@@ -776,41 +776,23 @@ function GraphCanvasView({ graph }: GraphCanvasProps) {
                   ×
                 </button>
                 <p>
-                  Hello! This web app is a tool to simplify the process of searching for course
-                  prerequisites at the University of Alberta through visualizing dependencies in a graph.
+                  Hi! UofA Course Graph was built as a tool for the University of Alberta, to help with looking up courses and finding their prerequisites. It also displays what courses would depend on having taken the searched course already, this can be helpful in determining the best order to take your courses in to fulfill all prerequisites.
                   <br />
                   <br />
-                  The graph can be utilized in two ways:
+                  All courses are searchable through the search bar on the top left. By clicking on any course node, you can view its details and go directly to the course catalogue page. You can change the depth filter to control the level of courses displayed, and see the legend for more information on how the data is represented here.
                   <br />
                   <br />
-                  1. Prerequisite View:
-                  <br />
-                  Search any course to view its prerequisites (and corequisites). Clicking on a course
-                  opens a popup to view its details and allow you to navigate directly to the course
-                  catalogue page. The depth filter controls the level of courses that are displayed -
-                  &apos;1 level&apos; means only the immediate prerequisites are displayed. Blue line
-                  means that taking any of these courses will fulfill the requirement, while red line
-                  means that all of those courses must be taken in order to fulfill the requirement.
-                  Prerequisite courses are indicated with a solid line and corequisite courses are
-                  indicated with a dotted line.
+                  Click the Dependency View button (underneath the Display corequisites checkbox) for an alternate view that displays the courses that would require having taken the course you searched up first as a prerequisite. 
                   <br />
                   <br />
-                  2. Dependency View:
-                  <br />
-                  Search any course to view all other courses that require having previously taken the
-                  searched course. All courses displayed in red depend on the searched course at its root
-                  as a prerequisite. This view is helpful as a tool to figure out the order in which
-                  courses must be taken.
+                  Thank you for using this tool! It is a personal project and is not affiliated with the University of Alberta. If you have any feedback, please let me know through my GitHub below.
                   <br />
                   <br />
-                  Note: This is a personal project and is not affiliated with the University of Alberta.
-                  <br />
-                  Data is sourced from the University of Alberta&apos;s course catalogue:
-                  https://apps.ualberta.ca/catalogue/courses/
+                  All data is taken from the University of Alberta&apos;s course catalogue and was last updated Oct. 2026.
                   <br />
                 </p>
                 <a
-                  href="https://github.com/judxyz/ua-prereq"
+                  href="https://github.com/judxyz/uofa-course-graph"
                   target="_blank"
                   rel="noreferrer"
                   className="graph-help-github-link"

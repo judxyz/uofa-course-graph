@@ -1,31 +1,34 @@
 ## UofA Course Graph
 
-Interactive prerequisite and dependency graph explorer for any course at the University of Alberta.
+UofA Course Graph was built as a tool for the University of Alberta, to help with looking up courses and finding their prerequisites. It also displays what courses would depend on having taken the searched course already, this can be helpful in determining the best order to take your courses in to fulfill all prerequisites.
 
-## Stack
+## Tech Stack
 
 - **App:** React, TypeScript, Vite, vis-network, FastAPI, psycopg
-- **Data:** PostgreSQL (Supabase)
-- **Deploy:** Vercel (web), AWS Lambda via SAM (API)
+- **Database:** PostgreSQL (Supabase)
+- **Deployment:** Vercel (frontend/web), AWS Lambda via SAM (backend/API)
 
 ## Documentation
 
-Technical docs: [docs/](docs/) — [data pipeline](docs/DATA_PIPELINE.md) and [application](docs/APPLICATION.md).
+[Data pipeline](docs/DATA_PIPELINE.md)
+
+[Application](docs/APPLICATION.md).
 
 ## Local development
 
-### Python
+### Python Venv
 
-1. Create and activate a Python virtual environment at the repo root.
+1. Create and activate a venv at repo root
 2. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
-### API
-3. Set `DATABASE_URL=postgresql://...` in a repo-root `.env`
+### API/backend
+3. Need to set `DATABASE_URL=postgresql://...` in a repo-root `.env`
 4. Start the API:
    ```bash
+   cd uofa-course-graph
    uvicorn app:app --reload --host 0.0.0.0 --port 8000
    ```
 
@@ -40,14 +43,13 @@ Technical docs: [docs/](docs/) — [data pipeline](docs/DATA_PIPELINE.md) and [a
    ```bash
    npm run dev -- --host
    ```
-3. Open `http://localhost:5173`
 
-For a phone on the same Wi‑Fi, set `VITE_API_BASE_URL=http://YOUR_PC_LAN_IP:8000` in `uofa-course-graph/.env.development.local` and add `CORS_EXTRA_ORIGINS=http://YOUR_PC_LAN_IP:5173` for the API. See the app README for more.
+To test on phone on the same Wi‑Fi, set `VITE_API_BASE_URL=http://YOUR_PC_LAN_IP:8000` in `uofa-course-graph/.env.development.local` and add `CORS_EXTRA_ORIGINS=http://YOUR_PC_LAN_IP:5173` for the API.
 
-### Scraper 
+### Scraper (manual)
 
 ```bash
-python run_scrape_add.py       # scrape + load in one step
+python run_scrape_add.py
 ```
 
 ## API overview

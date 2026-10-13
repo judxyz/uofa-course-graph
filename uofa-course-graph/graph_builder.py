@@ -286,7 +286,7 @@ class GraphBuilder:
         path: set[int],
     ) -> None:
         """
-        Recursively expand requirement groups/items for a course.
+        Recursively graph building: expand requirement groups/items for a course.
 
         depth is the actual node depth of the current course node.
         course_depth counts only course-to-course prerequisite hops.
@@ -297,6 +297,8 @@ class GraphBuilder:
         - direct required courses: 2
         - their groups: 3
         - their required courses: 4
+
+        It can make database queries, but normally _preload_graph_data() will be able to populate the caches (queried all in bulk)
         """
         if course_depth >= self.max_depth:
             return
@@ -429,7 +431,7 @@ class GraphBuilder:
     # --------------------------------------------------
 
     def _preload_graph_data(self, root_course_id: int) -> None:
-        """Batch-load graph rows up to the requested course depth."""
+        """Batch-load graph rows up to the requested course depth - this includes requirement groups, requirement items, referenced course records."""
         if self.max_depth <= 0:
             return
 

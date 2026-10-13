@@ -1,6 +1,6 @@
 # Data Pipeline — Scraping & Parsing
 
-Offline pipeline: scrape the UAlberta course catalogue → JSON → PostgreSQL → parse prerequisites into a graph schema. **Manually triggered** (no scheduled runs or monitoring).
+Manual pipeline: scrape the UAlberta course catalogue → JSON → PostgreSQL → parse prerequisites into a graph schema. 
 
 ## Flow
 

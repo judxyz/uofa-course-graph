@@ -30,7 +30,6 @@ node_modules.bak/
 uofa-course-graph/.tmp/
 uofa-course-graph/.env.development.local
 .aws-sam/
-scraper/data/data_courses.json
 uofa-course-graph/requirements.txt
 venv/
 .venv/
