@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 from dotenv import load_dotenv
 import psycopg
 
@@ -56,10 +56,15 @@ def load_scraped_courses(path: Path = INPUT_PATH) -> list[dict[str, Any]]:
     return data
 
 
-def upsert_courses(conn: psycopg.Connection, courses: list[dict[str, Any]]) -> None:
+def upsert_courses(
+    conn: psycopg.Connection,
+    courses: list[dict[str, Any]],
+    progress_callback: Callable[[int, int, str], None] | None = None,
+) -> None:
     """Insert or update course records in the database."""
     with conn.cursor() as cur:
-        for course in courses:
+        total = len(courses)
+        for index, course in enumerate(courses, start=1):
             cur.execute(
                 UPSERT_SQL,
                 (
@@ -74,6 +79,8 @@ def upsert_courses(conn: psycopg.Connection, courses: list[dict[str, Any]]) -> N
                     course.get("catalog_url"),
                 ),
             )
+            if progress_callback:
+                progress_callback(index, total, course["code"])
     conn.commit()
 
 

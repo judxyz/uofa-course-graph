@@ -10,7 +10,7 @@ from typing import List, Optional
 
 import requests
 from bs4 import BeautifulSoup, Tag, NavigableString
-from scrape_catalog_subjects import fetch_subject_slugs
+from a_scrape_catalog_subjects import fetch_subject_slugs
 
 
 FALLBACK_CATALOG_SUBJECTS = ["ai", "astro", "bioin", "biol", "bioph", "bot", "chem", "data", "eas", "en_ph", "ent", "genet", "geoph", "imin", "int_d", "ipg", "ma_ph", "ma_sc", "math", "micrb", "mint", "mm", "paleo", "phys", "plan", "psych", "sci", "stat", "wkexp", "zool"]

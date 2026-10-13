@@ -49,7 +49,11 @@ To test on phone on the same Wi‑Fi, set `VITE_API_BASE_URL=http://YOUR_PC_LAN_
 ### Scraper (manual)
 
 ```bash
-python run_scrape_add.py
+python d_run_scrape_add.py # scrape and adds to db (as set in env)
+# OR
+python b_scraper.py # this just scrapes the course data to data_courses.json, does not add to db
+python e_parse_requirements # using the courses table, parses ALL courses in the db
+
 ```
 
 ## API overview

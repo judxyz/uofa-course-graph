@@ -1033,8 +1033,11 @@ def process_all_courses() -> None:
         parsed_count = 0
         partial_count = 0
         unparsed_count = 0
+        total_courses = len(course_rows)
 
-        for row in course_rows:
+        print(f"Parsing {total_courses} courses...", flush=True)
+
+        for index, row in enumerate(course_rows, start=1):
             course_id, course_code, _, _ = row
 
             (
@@ -1064,8 +1067,11 @@ def process_all_courses() -> None:
             else:
                 unparsed_count += 1
 
-            # if (status.upper()) == "PARTIAL":
-            #     print(f"[{status.upper():8}] {course_code}")
+            print(
+                f"Parse progress: {index}/{total_courses} "
+                f"({course_code}) -> {status}",
+                flush=True,
+            )
 
         conn.commit()
 
