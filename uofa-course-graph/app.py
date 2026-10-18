@@ -23,6 +23,7 @@ def _cors_allow_origins() -> list[str]:
     origins = [
         "https://uofa-course-graph.vercel.app",
         "http://localhost:5173",
+        "https://uofa-course-graph-iksxkszs2-judyyzhu6-2726s-projects.vercel.app/"
     ]
     extra = os.environ.get("CORS_EXTRA_ORIGINS", "")
     for raw in extra.split(","):
