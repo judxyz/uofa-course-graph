@@ -28,7 +28,6 @@ export interface GraphGroup {
   courseId: number
   groupType: GroupType
   parentGroupId: number | null
-  displayLabel: string | null
   label: string
   visualStyle: VisualStyle
 }
@@ -73,7 +72,6 @@ export interface GroupNode extends BaseNode {
   groupId: number
   groupType: GroupType
   label: string
-  displayLabel: string | null
   visualStyle: VisualStyle
 }
 

@@ -22,7 +22,6 @@ CREATE TABLE public.requirement_groups (
   id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
   course_id integer NOT NULL,
   group_type character varying NOT NULL, -- ANY_OF, COREQ, PREREQ
-  display_label text,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   parent_group_id integer,
   visual_style text,

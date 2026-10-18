@@ -25,7 +25,6 @@ class ParsedGroup:
     relation_type: str  # PREREQ or COREQ
     course_codes: List[str]
     requirement_texts: List[str] = field(default_factory=list)
-    display_label: Optional[str] = None
     raw_fragment: Optional[str] = None
     visual_style: Optional[str] = None
     item_order: list[int] = field(default_factory=list)
@@ -151,12 +150,11 @@ def parse_and_then_or_fragment(text: str, relation_type: str) -> list[ParsedGrou
     right_group.group_key = right_key
     right_group.parent_group_key = parent_key
 
-    parent_group = ParsedGroup(
+    parent_group =     ParsedGroup(
         group_type="ANY_OF",
         relation_type=relation_type,
         course_codes=[],
         requirement_texts=[],
-        display_label="ANY_OF",
         raw_fragment=normalized,
         visual_style="or",
         item_order=[],
@@ -219,12 +217,11 @@ def parse_or_then_comma_fragment(text: str, relation_type: str) -> list[ParsedGr
     right_group.group_key = right_key
     right_group.parent_group_key = parent_key
 
-    parent_group = ParsedGroup(
+    parent_group =     ParsedGroup(
         group_type="ALL_OF",
         relation_type=relation_type,
         course_codes=[],
         requirement_texts=[],
-        display_label="ALL_OF",
         raw_fragment=normalized,
         visual_style="and",
         item_order=[],
@@ -374,26 +371,6 @@ def split_coreq_from_prereq(prereq_text: str, coreq_text: str) -> tuple[str, str
     return prereq, coreq
 
 
-def infer_group_display_label(group_type: str, relation_type: str, lowered_text: str) -> str:
-    """Return a consistent frontend-friendly display label."""
-    if group_type == "PREREQ":
-        return "PREREQ"
-
-    if relation_type == "COREQ":
-        return "COREQ"
-
-    if group_type == "ANY_OF":
-        return "ANY_OF"
-
-    if group_type == "ALL_OF":
-        return "ALL_OF"
-
-    if group_type == "COREQ":
-        return "COREQ"
-
-    return "UNKNOWN"
-
-
 def infer_visual_style(group_type: str, relation_type: str, lowered_text: str, course_count: int) -> str:
     """Store a lightweight visual classification for frontend rendering."""
     if relation_type == "COREQ":
@@ -439,7 +416,6 @@ def parse_fragment(text: str, relation_type: str) -> list[ParsedGroup]:
                 group_type="UNKNOWN",
                 relation_type=relation_type,
                 course_codes=[],
-                display_label="unknown",
                 raw_fragment=normalized,
                 visual_style="unknown",
                 item_order=[],
@@ -455,7 +431,6 @@ def parse_fragment(text: str, relation_type: str) -> list[ParsedGroup]:
                 relation_type=relation_type,
                 course_codes=[],
                 requirement_texts=requirement_texts,
-                display_label=infer_group_display_label(single_group_type, relation_type, lowered),
                 raw_fragment=normalized,
                 visual_style="requirement",
                 item_order=item_order,
@@ -470,7 +445,6 @@ def parse_fragment(text: str, relation_type: str) -> list[ParsedGroup]:
                 relation_type=relation_type,
                 course_codes=course_codes,
                 requirement_texts=requirement_texts,
-                display_label="ANY_OF",
                 raw_fragment=normalized,
                 visual_style="or",
                 item_order=item_order,
@@ -485,7 +459,6 @@ def parse_fragment(text: str, relation_type: str) -> list[ParsedGroup]:
                 relation_type=relation_type,
                 course_codes=course_codes,
                 requirement_texts=requirement_texts,
-                display_label="ANY_OF",
                 raw_fragment=normalized,
                 visual_style="or",
                 item_order=item_order,
@@ -500,7 +473,6 @@ def parse_fragment(text: str, relation_type: str) -> list[ParsedGroup]:
                 relation_type=relation_type,
                 course_codes=course_codes,
                 requirement_texts=requirement_texts,
-                display_label="ALL_OF",
                 raw_fragment=normalized,
                 visual_style="and",
                 item_order=item_order,
@@ -515,7 +487,6 @@ def parse_fragment(text: str, relation_type: str) -> list[ParsedGroup]:
                 relation_type=relation_type,
                 course_codes=course_codes,
                 requirement_texts=requirement_texts,
-                display_label="ALL_OF",
                 raw_fragment=normalized,
                 visual_style="and",
                 item_order=item_order,
@@ -532,7 +503,6 @@ def parse_fragment(text: str, relation_type: str) -> list[ParsedGroup]:
                 relation_type=relation_type,
                 course_codes=course_codes,
                 requirement_texts=requirement_texts,
-                display_label=infer_group_display_label(single_group_type, relation_type, lowered),
                 raw_fragment=normalized,
                 visual_style=infer_visual_style(single_group_type, relation_type, lowered, len(course_codes)),
                 item_order=item_order,
@@ -603,7 +573,6 @@ def normalize_parsed_groups(groups: list[ParsedGroup]) -> list[ParsedGroup]:
         if has_payload:
             replacement_type = "COREQ" if group.relation_type == "COREQ" else "PREREQ"
             group.group_type = replacement_type
-            group.display_label = replacement_type
             # Preserve semantics while removing AND-style node rendering.
             group.visual_style = None
             continue
@@ -705,7 +674,6 @@ def insert_requirement_group(
     course_id: int,
     group_type: str,
     parent_group_id: Optional[int],
-    display_label: Optional[str],
     visual_style: Optional[str],
 ) -> int:
     """Insert a requirement group and return its new ID."""
@@ -716,13 +684,12 @@ def insert_requirement_group(
                 course_id,
                 group_type,
                 parent_group_id,
-                display_label,
                 visual_style
             )
-            VALUES (%s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s)
             RETURNING id
             """,
-            (course_id, group_type, parent_group_id, display_label, visual_style),
+            (course_id, group_type, parent_group_id, visual_style),
         )
         return cur.fetchone()[0]
 
@@ -799,12 +766,6 @@ def _persist_group(
     """Persist a single parsed group with its items and edges."""
     stored_group_type = "COREQ" if group.relation_type == "COREQ" else group.group_type
 
-    display_label = group.display_label or infer_group_display_label(
-        stored_group_type,
-        group.relation_type,
-        (group.raw_fragment or "").lower(),
-    )
-
     visual_style = group.visual_style or infer_visual_style(
         stored_group_type,
         group.relation_type,
@@ -817,7 +778,6 @@ def _persist_group(
         course_id=course_id,
         group_type=stored_group_type,
         parent_group_id=parent_group_id,
-        display_label=display_label,
         visual_style=visual_style,
     )
 
@@ -856,7 +816,7 @@ def _persist_group(
             target_course_id=required_course_id,
             edge_type=resolve_group_edge_type(group),
             group_id=group_id,
-            label=display_label,
+            label=stored_group_type,
         )
 
     for requirement_index, requirement_text in enumerate(group.requirement_texts):

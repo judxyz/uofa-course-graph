@@ -32,7 +32,6 @@ class GroupRecord:
     course_id: int
     group_type: str
     parent_group_id: int | None
-    display_label: str | None
     visual_style: str | None
 
 
@@ -82,13 +81,6 @@ def is_relation_label_group(group: GroupRecord, resolved_group_type: str) -> boo
     is_styled_coreq = visual_style in {"and", "or"}
 
     if resolved_group_type == "COREQ":
-        return not is_styled_coreq
-
-    normalized_label = (group.display_label or "").strip().upper()
-    if normalized_label == "PREREQ":
-        return True
-
-    if normalized_label == "COREQ" and resolved_group_type in {"UNKNOWN", "COREQ"}:
         return not is_styled_coreq
 
     return False
@@ -481,7 +473,6 @@ class GraphBuilder:
                     course_id,
                     group_type,
                     parent_group_id,
-                    display_label,
                     visual_style
                 FROM requirement_groups
                 WHERE course_id = ANY(%s)
@@ -619,7 +610,6 @@ class GraphBuilder:
                     course_id,
                     group_type,
                     parent_group_id,
-                    display_label,
                     visual_style
                 FROM requirement_groups
                 WHERE course_id = %s AND parent_group_id IS NULL
@@ -646,7 +636,6 @@ class GraphBuilder:
                     course_id,
                     group_type,
                     parent_group_id,
-                    display_label,
                     visual_style
                 FROM requirement_groups
                 WHERE parent_group_id = %s
@@ -673,7 +662,6 @@ class GraphBuilder:
                     course_id,
                     group_type,
                     parent_group_id,
-                    display_label,
                     visual_style
                 FROM requirement_groups
                 WHERE id = %s
@@ -816,8 +804,7 @@ class GraphBuilder:
             "type": "group",
             "groupId": group.id,
             "groupType": group.group_type,
-            "label": group.display_label,
-            "displayLabel": group.display_label,
+            "label": group.group_type,
             "visualStyle": group.visual_style,
             "depth": depth,
         }
@@ -830,12 +817,9 @@ class GraphBuilder:
         """Map stored group types to the frontend-visible group type."""
         return group.group_type
 
-    def _resolve_group_label(self, group: GroupRecord, group_type: str) -> str | None:
-        """Normalize emitted labels so legacy data matches current frontend wording."""
-        if group_type in {"ALL_OF", "ANY_OF", "PREREQ", "COREQ"}:
-            return group_type
-
-        return group.display_label
+    def _resolve_group_label(self, group_type: str) -> str:
+        """Return the semantic label for a group node."""
+        return group_type
 
     @staticmethod
     def _relation_type_for_group_link(resolved_group_type: str) -> str:
@@ -866,7 +850,7 @@ class GraphBuilder:
     def _add_group_node(self, group: GroupRecord, depth: int, group_type: str) -> str:
         """Add a unique group node instance and return its node id."""
         node_id = self._next_node_id("group", group.id)
-        display_label = self._resolve_group_label(group, group_type)
+        label = self._resolve_group_label(group_type)
 
         if group.id not in self._seen_group_ids:
             self.groups.append(
@@ -876,8 +860,7 @@ class GraphBuilder:
                     "courseId": group.course_id,
                     "groupType": group_type,
                     "parentGroupId": group.parent_group_id,
-                    "displayLabel": display_label,
-                    "label": display_label,
+                    "label": label,
                     "visualStyle": group.visual_style,
                 }
             )
@@ -888,7 +871,6 @@ class GraphBuilder:
             course_id=group.course_id,
             group_type=group_type,
             parent_group_id=group.parent_group_id,
-            display_label=display_label,
             visual_style=group.visual_style,
         )
         node = self._make_group_node(group_node_data, depth, node_id)

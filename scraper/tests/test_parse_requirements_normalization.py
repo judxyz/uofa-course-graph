@@ -8,7 +8,6 @@ def test_normalize_converts_standalone_all_of_to_prereq():
             relation_type="PREREQ",
             course_codes=["CMPUT 174", "CMPUT 175"],
             requirement_texts=[],
-            display_label="ALL_OF",
             raw_fragment="CMPUT 174 and CMPUT 175",
             visual_style="and",
         )
@@ -18,7 +17,6 @@ def test_normalize_converts_standalone_all_of_to_prereq():
 
     assert len(normalized) == 1
     assert normalized[0].group_type == "PREREQ"
-    assert normalized[0].display_label == "PREREQ"
     assert normalized[0].visual_style is None
 
 
@@ -29,7 +27,6 @@ def test_normalize_keeps_all_of_when_nested_under_any_of():
             relation_type="PREREQ",
             course_codes=[],
             requirement_texts=[],
-            display_label="ANY_OF",
             raw_fragment="(CMPUT 174 and CMPUT 175) or CMPUT 274",
             visual_style="or",
             group_key="root-any",
@@ -40,7 +37,6 @@ def test_normalize_keeps_all_of_when_nested_under_any_of():
             relation_type="PREREQ",
             course_codes=["CMPUT 174", "CMPUT 175"],
             requirement_texts=[],
-            display_label="ALL_OF",
             raw_fragment="CMPUT 174 and CMPUT 175",
             visual_style="and",
             group_key="left-all",
@@ -51,7 +47,6 @@ def test_normalize_keeps_all_of_when_nested_under_any_of():
             relation_type="PREREQ",
             course_codes=["CMPUT 274"],
             requirement_texts=[],
-            display_label="PREREQ",
             raw_fragment="CMPUT 274",
             visual_style="single",
             group_key="right",
@@ -71,7 +66,6 @@ def test_normalize_drops_structural_all_of_and_reparents_children():
             relation_type="PREREQ",
             course_codes=[],
             requirement_texts=[],
-            display_label="ALL_OF",
             raw_fragment="A or B, C",
             visual_style="and",
             group_key="wrapper",
@@ -82,7 +76,6 @@ def test_normalize_drops_structural_all_of_and_reparents_children():
             relation_type="PREREQ",
             course_codes=["CMPUT 174", "CMPUT 274"],
             requirement_texts=[],
-            display_label="ANY_OF",
             raw_fragment="CMPUT 174 or CMPUT 274",
             visual_style="or",
             group_key="left",
@@ -93,7 +86,6 @@ def test_normalize_drops_structural_all_of_and_reparents_children():
             relation_type="PREREQ",
             course_codes=["CMPUT 204"],
             requirement_texts=[],
-            display_label="PREREQ",
             raw_fragment="CMPUT 204",
             visual_style="single",
             group_key="right",
