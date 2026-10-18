@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react'
 import { DataSet } from 'vis-data'
 import { Network } from 'vis-network'
 import type { Edge, Node, Options } from 'vis-network'
-import { fetchCourse } from '../api/courses'
+import { fetchCourse } from '../api/coursesApi'
 import type { GraphNode, GraphResponse, GroupType } from '../types/graph'
 
 interface GraphCanvasProps {

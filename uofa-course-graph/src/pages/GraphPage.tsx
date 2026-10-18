@@ -12,7 +12,7 @@ import {
   DEFAULT_GRAPH_COURSE_DISPLAY,
   formatCourseCodeForDisplay,
   formatCourseCodeForRoute,
-} from '../lib/courseCode'
+} from '../lib/normalizeCourseCode'
 
 const COURSE_DEPTH_OPTIONS = [1, 2, 3, 4]
 

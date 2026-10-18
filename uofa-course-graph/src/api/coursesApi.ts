@@ -4,7 +4,7 @@ import type { CourseDetails, CourseSearchItem } from '../types/course'
  * Purpose: Provide API functions for course search and course details.
  */
 
-import { fetchJson, getApiBaseUrl } from './client'
+import { fetchJson, getApiBaseUrl } from './httpClient'
 
 export async function fetchCourses(): Promise<CourseSearchItem[]> {
   const url = new URL('/courses', getApiBaseUrl())
