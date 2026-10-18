@@ -19,7 +19,6 @@ class CourseRecord:
     number: int | str | None
     title: str
     description: str | None
-    other_notes: str | None
     raw_prereq_text: str | None
     raw_coreq_text: str | None
     catalog_url: str | None
@@ -110,28 +109,6 @@ def should_omit_visual_group_node(
         group, visual_depth
     )
 
-
-def ensure_requirement_item_schema(conn) -> None:
-    """Allow graph reads to include unresolved requirement item codes."""
-    with conn.cursor() as cur:
-        cur.execute(
-            """
-            ALTER TABLE requirement_items
-            ADD COLUMN IF NOT EXISTS missing_course_code TEXT
-            """
-        )
-        cur.execute(
-            """
-            ALTER TABLE requirement_items
-            ADD COLUMN IF NOT EXISTS requirement_text TEXT
-            """
-        )
-        cur.execute(
-            """
-            ALTER TABLE requirement_items
-            ALTER COLUMN required_course_id DROP NOT NULL
-            """
-        )
 
 
 class GraphBuilder:
@@ -253,7 +230,6 @@ class GraphBuilder:
                     c.number,
                     c.title,
                     c.description,
-                    c.other_notes,
                     c.raw_prereq_text,
                     c.raw_coreq_text,
                     c.catalog_url,
@@ -473,7 +449,6 @@ class GraphBuilder:
                     number,
                     title,
                     description,
-                    other_notes,
                     raw_prereq_text,
                     raw_coreq_text,
                     catalog_url,
@@ -582,7 +557,6 @@ class GraphBuilder:
                     number,
                     title,
                     description,
-                    other_notes,
                     raw_prereq_text,
                     raw_coreq_text,
                     catalog_url,
@@ -614,7 +588,6 @@ class GraphBuilder:
                     number,
                     title,
                     description,
-                    other_notes,
                     raw_prereq_text,
                     raw_coreq_text,
                     catalog_url,
@@ -780,7 +753,6 @@ class GraphBuilder:
             "number": course.number,
             "title": course.title,
             "description": course.description,
-            "otherNotes": course.other_notes,
             "catalogUrl": course.catalog_url,
             "parseStatus": course.parse_status,
         }

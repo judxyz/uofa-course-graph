@@ -1,3 +1,8 @@
+/**
+ * File: GraphCanvas.tsx
+ * Purpose: Render and manage the interactive course prerequisite graph.
+ */
+
 import { useEffect, useRef, useState } from 'react'
 import { DataSet } from 'vis-data'
 import { Network } from 'vis-network'

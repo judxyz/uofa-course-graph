@@ -1,3 +1,8 @@
+/**
+ * File: graph.ts
+ * Purpose: Define shared graph data and view-mode types.
+ */
+
 import type { CourseSummary, ParseStatus, RootCourse } from './course'
 
 export type GroupType = 'ANY_OF' | 'ALL_OF' | 'COREQ' | 'UNKNOWN'

@@ -1,3 +1,8 @@
+/**
+ * File: GraphPage.tsx
+ * Purpose: Compose the course graph page and its controls.
+ */
+
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { GraphCanvas } from '../components/GraphCanvas'

@@ -1,4 +1,9 @@
 import type { CourseDetails, CourseSearchItem } from '../types/course'
+/**
+ * File: courses.ts
+ * Purpose: Provide API functions for course search and course details.
+ */
+
 import { fetchJson, getApiBaseUrl } from './client'
 
 export async function fetchCourses(): Promise<CourseSearchItem[]> {
@@ -13,7 +18,6 @@ export async function fetchCourse(code: string): Promise<CourseDetails> {
     code: string
     title: string
     description: string | null
-    other_notes: string | null
     raw_prereq_text: string | null
     raw_coreq_text: string | null
     catalog_url: string | null
@@ -25,7 +29,6 @@ export async function fetchCourse(code: string): Promise<CourseDetails> {
     code: response.code,
     title: response.title,
     description: response.description,
-    otherNotes: response.other_notes,
     rawPrereqText: response.raw_prereq_text,
     rawCoreqText: response.raw_coreq_text,
     catalogUrl: response.catalog_url,

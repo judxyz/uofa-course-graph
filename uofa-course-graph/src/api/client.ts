@@ -1,3 +1,8 @@
+/**
+ * File: client.ts
+ * Purpose: Provide shared HTTP configuration and JSON request handling.
+ */
+
 const DEFAULT_API_BASE_URL = 'http://localhost:8000'
 
 export function getApiBaseUrl() {

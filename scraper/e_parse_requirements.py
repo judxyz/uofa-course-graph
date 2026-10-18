@@ -39,7 +39,7 @@ class ParsedPath:
     groups: list[ParsedGroup]
 
 
-def split_requirement_fragments(text: str) -> list[str]:
+def split_by_semicolon(text: str) -> list[str]:
     """Split a large prerequisite string into smaller pieces."""
     if not text:
         return []
@@ -191,7 +191,7 @@ def parse_or_then_comma_fragment(text: str, relation_type: str) -> list[ParsedGr
     if not re.search(r"\bor\b", left_text, flags=re.IGNORECASE):
         return []
 
-    if not extract_course_codes(right_text):
+    if not extract_course_codes(right_text): # right side has no course code, but has number. attach the last course subject on the left side to the right side
         right_number_match = re.fullmatch(r"(\d{3}[A-Z]?)", right_text.strip(), flags=re.IGNORECASE)
         left_codes = extract_course_codes(left_text)
         if right_number_match and left_codes:
@@ -555,12 +555,12 @@ def parse_requirement_paths(text: str, relation_type: str) -> list[ParsedPath]:
         return []
 
     normalized = normalize_text(text)
-    if re.search(r"\bis restricted to students\b", normalized, flags=re.IGNORECASE):
-        return []
+    # if re.search(r"\bis restricted to students\b", normalized, flags=re.IGNORECASE):
+    #     return []
 
     normalized = expand_shortened_course_codes(normalized)
     groups = []
-    for fragment in split_requirement_fragments(normalized):
+    for fragment in split_by_semicolon(normalized):
         mixed_logic_groups = parse_and_then_or_fragment(fragment, relation_type)
         if mixed_logic_groups:
             groups.extend(mixed_logic_groups)
@@ -699,28 +699,6 @@ def clear_existing_parse_data_for_course(conn, course_id: int) -> None:
         )
 
 
-def ensure_requirement_item_schema(conn) -> None:
-    """Allow requirement items to preserve unresolved course codes."""
-    with conn.cursor() as cur:
-        cur.execute(
-            """
-            ALTER TABLE requirement_items
-            ADD COLUMN IF NOT EXISTS missing_course_code TEXT
-            """
-        )
-        cur.execute(
-            """
-            ALTER TABLE requirement_items
-            ADD COLUMN IF NOT EXISTS requirement_text TEXT
-            """
-        )
-        cur.execute(
-            """
-            ALTER TABLE requirement_items
-            ALTER COLUMN required_course_id DROP NOT NULL
-            """
-        )
-
 
 def insert_requirement_group(
     conn,
@@ -784,7 +762,7 @@ def insert_course_edge(
     group_id: Optional[int],
     label: Optional[str],
 ) -> None:
-    """Insert a graph edge from a required course to its target course."""
+    """Insert a graph edge from target course to its required course."""
     with conn.cursor() as cur:
         cur.execute(
             """
@@ -874,8 +852,8 @@ def _persist_group(
 
         insert_course_edge(
             conn=conn,
-            source_course_id=required_course_id,
-            target_course_id=course_id,
+            source_course_id=course_id,
+            target_course_id=required_course_id,
             edge_type=resolve_group_edge_type(group),
             group_id=group_id,
             label=display_label,
@@ -1017,7 +995,6 @@ def process_all_courses() -> None:
     - preserved item order
     """
     with psycopg.connect(DATABASE_URL) as conn:
-        ensure_requirement_item_schema(conn)
         code_to_id = get_course_code_to_id(conn)
 
         with conn.cursor() as cur:

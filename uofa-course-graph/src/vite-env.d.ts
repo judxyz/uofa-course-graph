@@ -1,3 +1,8 @@
+/**
+ * File: vite-env.d.ts
+ * Purpose: Provide Vite client type declarations for the frontend.
+ */
+
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {

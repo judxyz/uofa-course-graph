@@ -1,4 +1,4 @@
-from parse_requirements import ParsedGroup, normalize_parsed_groups
+from e_parse_requirements import ParsedGroup, normalize_parsed_groups
 
 
 def test_normalize_converts_standalone_all_of_to_prereq():
