@@ -42,16 +42,3 @@ CREATE TABLE public.requirement_items (
   CONSTRAINT requirement_items_group_id_fkey FOREIGN KEY (group_id) REFERENCES public.requirement_groups(id),
   CONSTRAINT requirement_items_required_course_id_fkey FOREIGN KEY (required_course_id) REFERENCES public.courses(id)
 );
-CREATE TABLE public.course_edges (
-  id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
-  source_course_id integer NOT NULL,
-  target_course_id integer NOT NULL,
-  edge_type character varying NOT NULL,
-  group_id integer,
-  label text,
-  created_at timestamp with time zone NOT NULL DEFAULT now(),
-  CONSTRAINT course_edges_pkey PRIMARY KEY (id),
-  CONSTRAINT course_edges_group_id_fkey FOREIGN KEY (group_id) REFERENCES public.requirement_groups(id),
-  CONSTRAINT course_edges_source_course_id_fkey FOREIGN KEY (source_course_id) REFERENCES public.courses(id),
-  CONSTRAINT course_edges_target_course_id_fkey FOREIGN KEY (target_course_id) REFERENCES public.courses(id)
-);

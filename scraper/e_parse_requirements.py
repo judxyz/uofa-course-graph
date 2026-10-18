@@ -643,14 +643,6 @@ def clear_existing_parse_data_for_course(conn, course_id: int) -> None:
     with conn.cursor() as cur:
         cur.execute(
             """
-            DELETE FROM course_edges
-            WHERE target_course_id = %s
-            """,
-            (course_id,),
-        )
-
-        cur.execute(
-            """
             DELETE FROM requirement_items
             WHERE group_id IN (
                 SELECT id FROM requirement_groups WHERE course_id = %s
@@ -721,40 +713,6 @@ def insert_requirement_item(
         )
 
 
-def insert_course_edge(
-    conn,
-    source_course_id: int,
-    target_course_id: int,
-    edge_type: str,
-    group_id: Optional[int],
-    label: Optional[str],
-) -> None:
-    """Insert a graph edge from target course to its required course."""
-    with conn.cursor() as cur:
-        cur.execute(
-            """
-            INSERT INTO course_edges (
-                source_course_id,
-                target_course_id,
-                edge_type,
-                group_id,
-                label
-            )
-            VALUES (%s, %s, %s, %s, %s)
-            """,
-            (source_course_id, target_course_id, edge_type, group_id, label),
-        )
-
-
-def resolve_group_edge_type(group: ParsedGroup) -> str:
-    """Map a parsed group to the convenience edge type stored in the database."""
-    if group.relation_type == "COREQ":
-        return "COREQ"
-    if group.group_type == "ANY_OF":
-        return "OR"
-    return "PREREQ"
-
-
 def _persist_group(
     conn,
     course_id: int,
@@ -763,7 +721,7 @@ def _persist_group(
     parent_group_id: Optional[int],
     code_to_id: dict[str, int],
 ) -> int:
-    """Persist a single parsed group with its items and edges."""
+    """Persist a single parsed group and its items."""
     stored_group_type = "COREQ" if group.relation_type == "COREQ" else group.group_type
 
     visual_style = group.visual_style or infer_visual_style(
@@ -808,15 +766,6 @@ def _persist_group(
             required_course_id=required_course_id,
             relation_type=group.relation_type,
             item_order=item_order,
-        )
-
-        insert_course_edge(
-            conn=conn,
-            source_course_id=course_id,
-            target_course_id=required_course_id,
-            edge_type=resolve_group_edge_type(group),
-            group_id=group_id,
-            label=stored_group_type,
         )
 
     for requirement_index, requirement_text in enumerate(group.requirement_texts):

@@ -48,7 +48,7 @@ Browser (React) → FastAPI (Lambda/local) → PostgreSQL
 
 ## Graph builder
 
-`GraphBuilder` reads `courses`, `requirement_groups`, `requirement_items`, `course_edges` and returns:
+`GraphBuilder` reads `courses`, `requirement_groups`, and `requirement_items` and returns:
 
 - `rootCourse`, `groups`, `items`
 - `nodes` — `course` | `group` | `requirement`

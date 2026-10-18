@@ -9,7 +9,7 @@ Catalogue HTML → scraper.py → data/data_courses.json → add_to_db.py → co
                                                               ↓
                                                    parse_requirements.py
                                                               ↓
-                              requirement_groups | requirement_items | course_edges
+                              requirement_groups | requirement_items
 ```
 
 ## Setup
@@ -77,9 +77,8 @@ Reads `raw_prereq_text` / `raw_coreq_text`, writes structured rows, updates `par
 |-------|----------|
 | `requirement_groups` | Logic nodes (`group_type`, `parent_group_id`, display metadata) |
 | `requirement_items` | Course FK, `missing_course_code`, or `requirement_text` |
-| `course_edges` | `source` (prereq) → `target` (dependent), `edge_type` |
 
-Per course: clears old parse rows, re-inserts, commits at end. Self-referencing course → aborts entire job. Missing referenced course → stored on item, no resolved edge.
+Per course: clears old parse rows, re-inserts, commits at end. Self-referencing course → aborts entire job. Missing referenced course → stored on item.
 
 ## Operations
 
