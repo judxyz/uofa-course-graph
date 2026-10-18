@@ -34,7 +34,7 @@ def _cors_allow_origins() -> list[str]:
 
 app = FastAPI(title="UofA Course Graph")
 
-DEFAULT_GRAPH_COURSE = "CMPUT 267"
+DEFAULT_GRAPH_COURSE = "CMPUT 229"
 
 
 @app.get("/")
