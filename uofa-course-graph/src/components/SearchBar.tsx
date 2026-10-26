@@ -1,6 +1,11 @@
+/**
+ * File: SearchBar.tsx
+ * Purpose: Render course search input, results, and selection behavior.
+ */
+
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
-import { fetchCourses } from '../api/courses'
-import { formatCourseCodeForDisplay } from '../lib/courseCode'
+import { fetchCourses } from '../api/coursesApi'
+import { formatCourseCodeForDisplay } from '../lib/normalizeCourseCode'
 import type { CourseSearchItem } from '../types/course'
 
 interface SearchBarProps {

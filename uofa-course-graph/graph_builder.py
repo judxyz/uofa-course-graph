@@ -19,7 +19,6 @@ class CourseRecord:
     number: int | str | None
     title: str
     description: str | None
-    other_notes: str | None
     raw_prereq_text: str | None
     raw_coreq_text: str | None
     catalog_url: str | None
@@ -33,7 +32,6 @@ class GroupRecord:
     course_id: int
     group_type: str
     parent_group_id: int | None
-    display_label: str | None
     visual_style: str | None
 
 
@@ -85,13 +83,6 @@ def is_relation_label_group(group: GroupRecord, resolved_group_type: str) -> boo
     if resolved_group_type == "COREQ":
         return not is_styled_coreq
 
-    normalized_label = (group.display_label or "").strip().upper()
-    if normalized_label == "PREREQ":
-        return True
-
-    if normalized_label == "COREQ" and resolved_group_type in {"UNKNOWN", "COREQ"}:
-        return not is_styled_coreq
-
     return False
 
 
@@ -110,28 +101,6 @@ def should_omit_visual_group_node(
         group, visual_depth
     )
 
-
-def ensure_requirement_item_schema(conn) -> None:
-    """Allow graph reads to include unresolved requirement item codes."""
-    with conn.cursor() as cur:
-        cur.execute(
-            """
-            ALTER TABLE requirement_items
-            ADD COLUMN IF NOT EXISTS missing_course_code TEXT
-            """
-        )
-        cur.execute(
-            """
-            ALTER TABLE requirement_items
-            ADD COLUMN IF NOT EXISTS requirement_text TEXT
-            """
-        )
-        cur.execute(
-            """
-            ALTER TABLE requirement_items
-            ALTER COLUMN required_course_id DROP NOT NULL
-            """
-        )
 
 
 class GraphBuilder:
@@ -253,7 +222,6 @@ class GraphBuilder:
                     c.number,
                     c.title,
                     c.description,
-                    c.other_notes,
                     c.raw_prereq_text,
                     c.raw_coreq_text,
                     c.catalog_url,
@@ -473,7 +441,6 @@ class GraphBuilder:
                     number,
                     title,
                     description,
-                    other_notes,
                     raw_prereq_text,
                     raw_coreq_text,
                     catalog_url,
@@ -506,7 +473,6 @@ class GraphBuilder:
                     course_id,
                     group_type,
                     parent_group_id,
-                    display_label,
                     visual_style
                 FROM requirement_groups
                 WHERE course_id = ANY(%s)
@@ -582,7 +548,6 @@ class GraphBuilder:
                     number,
                     title,
                     description,
-                    other_notes,
                     raw_prereq_text,
                     raw_coreq_text,
                     catalog_url,
@@ -614,7 +579,6 @@ class GraphBuilder:
                     number,
                     title,
                     description,
-                    other_notes,
                     raw_prereq_text,
                     raw_coreq_text,
                     catalog_url,
@@ -646,7 +610,6 @@ class GraphBuilder:
                     course_id,
                     group_type,
                     parent_group_id,
-                    display_label,
                     visual_style
                 FROM requirement_groups
                 WHERE course_id = %s AND parent_group_id IS NULL
@@ -673,7 +636,6 @@ class GraphBuilder:
                     course_id,
                     group_type,
                     parent_group_id,
-                    display_label,
                     visual_style
                 FROM requirement_groups
                 WHERE parent_group_id = %s
@@ -700,7 +662,6 @@ class GraphBuilder:
                     course_id,
                     group_type,
                     parent_group_id,
-                    display_label,
                     visual_style
                 FROM requirement_groups
                 WHERE id = %s
@@ -780,7 +741,6 @@ class GraphBuilder:
             "number": course.number,
             "title": course.title,
             "description": course.description,
-            "otherNotes": course.other_notes,
             "catalogUrl": course.catalog_url,
             "parseStatus": course.parse_status,
         }
@@ -844,8 +804,7 @@ class GraphBuilder:
             "type": "group",
             "groupId": group.id,
             "groupType": group.group_type,
-            "label": group.display_label,
-            "displayLabel": group.display_label,
+            "label": group.group_type,
             "visualStyle": group.visual_style,
             "depth": depth,
         }
@@ -858,12 +817,9 @@ class GraphBuilder:
         """Map stored group types to the frontend-visible group type."""
         return group.group_type
 
-    def _resolve_group_label(self, group: GroupRecord, group_type: str) -> str | None:
-        """Normalize emitted labels so legacy data matches current frontend wording."""
-        if group_type in {"ALL_OF", "ANY_OF", "PREREQ", "COREQ"}:
-            return group_type
-
-        return group.display_label
+    def _resolve_group_label(self, group_type: str) -> str:
+        """Return the semantic label for a group node."""
+        return group_type
 
     @staticmethod
     def _relation_type_for_group_link(resolved_group_type: str) -> str:
@@ -894,7 +850,7 @@ class GraphBuilder:
     def _add_group_node(self, group: GroupRecord, depth: int, group_type: str) -> str:
         """Add a unique group node instance and return its node id."""
         node_id = self._next_node_id("group", group.id)
-        display_label = self._resolve_group_label(group, group_type)
+        label = self._resolve_group_label(group_type)
 
         if group.id not in self._seen_group_ids:
             self.groups.append(
@@ -904,8 +860,7 @@ class GraphBuilder:
                     "courseId": group.course_id,
                     "groupType": group_type,
                     "parentGroupId": group.parent_group_id,
-                    "displayLabel": display_label,
-                    "label": display_label,
+                    "label": label,
                     "visualStyle": group.visual_style,
                 }
             )
@@ -916,7 +871,6 @@ class GraphBuilder:
             course_id=group.course_id,
             group_type=group_type,
             parent_group_id=group.parent_group_id,
-            display_label=display_label,
             visual_style=group.visual_style,
         )
         node = self._make_group_node(group_node_data, depth, node_id)

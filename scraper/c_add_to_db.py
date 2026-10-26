@@ -20,7 +20,6 @@ INSERT INTO courses (
     number,
     title,
     description,
-    other_notes,
     raw_prereq_text,
     raw_coreq_text,
     catalog_url,
@@ -32,7 +31,6 @@ ON CONFLICT (code) DO UPDATE SET
     number = EXCLUDED.number,
     title = EXCLUDED.title,
     description = EXCLUDED.description,
-    other_notes = EXCLUDED.other_notes,
     raw_prereq_text = EXCLUDED.raw_prereq_text,
     raw_coreq_text = EXCLUDED.raw_coreq_text,
     catalog_url = EXCLUDED.catalog_url,
@@ -73,7 +71,6 @@ def upsert_courses(
                     course["number"],
                     course["title"],
                     course.get("description"),
-                    None,                    # other_notes for now
                     course.get("raw_prereq_text"),
                     course.get("raw_coreq_text"),
                     course.get("catalog_url"),

@@ -1,3 +1,8 @@
+/**
+ * File: course.ts
+ * Purpose: Define shared course data types used by the frontend.
+ */
+
 export type CourseNumber = string | number
 
 export type ParseStatus = 'parsed' | 'partial' | 'unparsed'
@@ -16,7 +21,6 @@ export interface CourseSummary extends CourseSearchItem {
 
 export interface RootCourse extends CourseSummary {
   description: string | null
-  otherNotes: string | null
   catalogUrl: string | null
 }
 
@@ -25,7 +29,6 @@ export interface CourseDetails {
   code: string
   title: string
   description: string | null
-  otherNotes: string | null
   rawPrereqText: string | null
   rawCoreqText: string | null
   catalogUrl: string | null

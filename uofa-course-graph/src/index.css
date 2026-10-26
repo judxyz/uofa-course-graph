@@ -60,6 +60,11 @@ a:focus-visible {
   outline-offset: 2px;
 }
 
+/*
+ * File: index.css
+ * Purpose: Define global layout, component, and responsive styles.
+ */
+
 /* App shell & top bar */
 
 .app-shell {

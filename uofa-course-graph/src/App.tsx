@@ -1,3 +1,8 @@
+/**
+ * File: App.tsx
+ * Purpose: Define the application's route structure and analytics integration.
+ */
+
 import { Analytics } from '@vercel/analytics/react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { GraphPage } from './pages/GraphPage'

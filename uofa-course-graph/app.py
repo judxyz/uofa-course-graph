@@ -23,6 +23,7 @@ def _cors_allow_origins() -> list[str]:
     origins = [
         "https://uofa-course-graph.vercel.app",
         "http://localhost:5173",
+        "https://uofa-course-graph-iksxkszs2-judyyzhu6-2726s-projects.vercel.app/"
     ]
     extra = os.environ.get("CORS_EXTRA_ORIGINS", "")
     for raw in extra.split(","):
@@ -109,7 +110,6 @@ def get_course(code: str):
                     code,
                     title,
                     description,
-                    other_notes,
                     raw_prereq_text,
                     raw_coreq_text,
                     catalog_url,
@@ -129,7 +129,6 @@ def get_course(code: str):
         code_value,
         title,
         description,
-        other_notes,
         raw_prereq_text,
         raw_coreq_text,
         catalog_url,
@@ -141,7 +140,6 @@ def get_course(code: str):
         "code": code_value,
         "title": title,
         "description": description,
-        "other_notes": other_notes,
         "raw_prereq_text": raw_prereq_text,
         "raw_coreq_text": raw_coreq_text,
         "catalog_url": catalog_url,

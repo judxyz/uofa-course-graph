@@ -1,5 +1,10 @@
+/**
+ * File: useCourseGraph.ts
+ * Purpose: Manage course graph selection, options, loading, and errors.
+ */
+
 import { useEffect, useState } from 'react'
-import { fetchCourseGraph } from '../api/graph'
+import { fetchCourseGraph } from '../api/graphApi'
 import type { FetchCourseGraphOptions, GraphResponse, GraphViewMode } from '../types/graph'
 
 export interface UseCourseGraphState {

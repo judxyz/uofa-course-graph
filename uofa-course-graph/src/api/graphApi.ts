@@ -1,6 +1,11 @@
 import type { FetchCourseGraphOptions, GraphResponse } from '../types/graph'
-import { normalizeCourseCode } from '../lib/courseCode'
-import { fetchJson, getApiBaseUrl } from './client'
+import { normalizeCourseCode } from '../lib/normalizeCourseCode'
+/**
+ * File: graph.ts
+ * Purpose: Provide the API function for loading course prerequisite graphs.
+ */
+
+import { fetchJson, getApiBaseUrl } from './httpClient'
 
 export async function fetchCourseGraph(
   code: string,

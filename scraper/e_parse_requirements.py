@@ -25,7 +25,6 @@ class ParsedGroup:
     relation_type: str  # PREREQ or COREQ
     course_codes: List[str]
     requirement_texts: List[str] = field(default_factory=list)
-    display_label: Optional[str] = None
     raw_fragment: Optional[str] = None
     visual_style: Optional[str] = None
     item_order: list[int] = field(default_factory=list)
@@ -39,7 +38,7 @@ class ParsedPath:
     groups: list[ParsedGroup]
 
 
-def split_requirement_fragments(text: str) -> list[str]:
+def split_by_semicolon(text: str) -> list[str]:
     """Split a large prerequisite string into smaller pieces."""
     if not text:
         return []
@@ -151,12 +150,11 @@ def parse_and_then_or_fragment(text: str, relation_type: str) -> list[ParsedGrou
     right_group.group_key = right_key
     right_group.parent_group_key = parent_key
 
-    parent_group = ParsedGroup(
+    parent_group =     ParsedGroup(
         group_type="ANY_OF",
         relation_type=relation_type,
         course_codes=[],
         requirement_texts=[],
-        display_label="ANY_OF",
         raw_fragment=normalized,
         visual_style="or",
         item_order=[],
@@ -191,7 +189,7 @@ def parse_or_then_comma_fragment(text: str, relation_type: str) -> list[ParsedGr
     if not re.search(r"\bor\b", left_text, flags=re.IGNORECASE):
         return []
 
-    if not extract_course_codes(right_text):
+    if not extract_course_codes(right_text): # right side has no course code, but has number. attach the last course subject on the left side to the right side
         right_number_match = re.fullmatch(r"(\d{3}[A-Z]?)", right_text.strip(), flags=re.IGNORECASE)
         left_codes = extract_course_codes(left_text)
         if right_number_match and left_codes:
@@ -219,12 +217,11 @@ def parse_or_then_comma_fragment(text: str, relation_type: str) -> list[ParsedGr
     right_group.group_key = right_key
     right_group.parent_group_key = parent_key
 
-    parent_group = ParsedGroup(
+    parent_group =     ParsedGroup(
         group_type="ALL_OF",
         relation_type=relation_type,
         course_codes=[],
         requirement_texts=[],
-        display_label="ALL_OF",
         raw_fragment=normalized,
         visual_style="and",
         item_order=[],
@@ -374,26 +371,6 @@ def split_coreq_from_prereq(prereq_text: str, coreq_text: str) -> tuple[str, str
     return prereq, coreq
 
 
-def infer_group_display_label(group_type: str, relation_type: str, lowered_text: str) -> str:
-    """Return a consistent frontend-friendly display label."""
-    if group_type == "PREREQ":
-        return "PREREQ"
-
-    if relation_type == "COREQ":
-        return "COREQ"
-
-    if group_type == "ANY_OF":
-        return "ANY_OF"
-
-    if group_type == "ALL_OF":
-        return "ALL_OF"
-
-    if group_type == "COREQ":
-        return "COREQ"
-
-    return "UNKNOWN"
-
-
 def infer_visual_style(group_type: str, relation_type: str, lowered_text: str, course_count: int) -> str:
     """Store a lightweight visual classification for frontend rendering."""
     if relation_type == "COREQ":
@@ -439,7 +416,6 @@ def parse_fragment(text: str, relation_type: str) -> list[ParsedGroup]:
                 group_type="UNKNOWN",
                 relation_type=relation_type,
                 course_codes=[],
-                display_label="unknown",
                 raw_fragment=normalized,
                 visual_style="unknown",
                 item_order=[],
@@ -455,7 +431,6 @@ def parse_fragment(text: str, relation_type: str) -> list[ParsedGroup]:
                 relation_type=relation_type,
                 course_codes=[],
                 requirement_texts=requirement_texts,
-                display_label=infer_group_display_label(single_group_type, relation_type, lowered),
                 raw_fragment=normalized,
                 visual_style="requirement",
                 item_order=item_order,
@@ -470,7 +445,6 @@ def parse_fragment(text: str, relation_type: str) -> list[ParsedGroup]:
                 relation_type=relation_type,
                 course_codes=course_codes,
                 requirement_texts=requirement_texts,
-                display_label="ANY_OF",
                 raw_fragment=normalized,
                 visual_style="or",
                 item_order=item_order,
@@ -485,7 +459,6 @@ def parse_fragment(text: str, relation_type: str) -> list[ParsedGroup]:
                 relation_type=relation_type,
                 course_codes=course_codes,
                 requirement_texts=requirement_texts,
-                display_label="ANY_OF",
                 raw_fragment=normalized,
                 visual_style="or",
                 item_order=item_order,
@@ -500,7 +473,6 @@ def parse_fragment(text: str, relation_type: str) -> list[ParsedGroup]:
                 relation_type=relation_type,
                 course_codes=course_codes,
                 requirement_texts=requirement_texts,
-                display_label="ALL_OF",
                 raw_fragment=normalized,
                 visual_style="and",
                 item_order=item_order,
@@ -515,7 +487,6 @@ def parse_fragment(text: str, relation_type: str) -> list[ParsedGroup]:
                 relation_type=relation_type,
                 course_codes=course_codes,
                 requirement_texts=requirement_texts,
-                display_label="ALL_OF",
                 raw_fragment=normalized,
                 visual_style="and",
                 item_order=item_order,
@@ -532,7 +503,6 @@ def parse_fragment(text: str, relation_type: str) -> list[ParsedGroup]:
                 relation_type=relation_type,
                 course_codes=course_codes,
                 requirement_texts=requirement_texts,
-                display_label=infer_group_display_label(single_group_type, relation_type, lowered),
                 raw_fragment=normalized,
                 visual_style=infer_visual_style(single_group_type, relation_type, lowered, len(course_codes)),
                 item_order=item_order,
@@ -555,12 +525,12 @@ def parse_requirement_paths(text: str, relation_type: str) -> list[ParsedPath]:
         return []
 
     normalized = normalize_text(text)
-    if re.search(r"\bis restricted to students\b", normalized, flags=re.IGNORECASE):
-        return []
+    # if re.search(r"\bis restricted to students\b", normalized, flags=re.IGNORECASE):
+    #     return []
 
     normalized = expand_shortened_course_codes(normalized)
     groups = []
-    for fragment in split_requirement_fragments(normalized):
+    for fragment in split_by_semicolon(normalized):
         mixed_logic_groups = parse_and_then_or_fragment(fragment, relation_type)
         if mixed_logic_groups:
             groups.extend(mixed_logic_groups)
@@ -603,7 +573,6 @@ def normalize_parsed_groups(groups: list[ParsedGroup]) -> list[ParsedGroup]:
         if has_payload:
             replacement_type = "COREQ" if group.relation_type == "COREQ" else "PREREQ"
             group.group_type = replacement_type
-            group.display_label = replacement_type
             # Preserve semantics while removing AND-style node rendering.
             group.visual_style = None
             continue
@@ -674,14 +643,6 @@ def clear_existing_parse_data_for_course(conn, course_id: int) -> None:
     with conn.cursor() as cur:
         cur.execute(
             """
-            DELETE FROM course_edges
-            WHERE target_course_id = %s
-            """,
-            (course_id,),
-        )
-
-        cur.execute(
-            """
             DELETE FROM requirement_items
             WHERE group_id IN (
                 SELECT id FROM requirement_groups WHERE course_id = %s
@@ -699,35 +660,12 @@ def clear_existing_parse_data_for_course(conn, course_id: int) -> None:
         )
 
 
-def ensure_requirement_item_schema(conn) -> None:
-    """Allow requirement items to preserve unresolved course codes."""
-    with conn.cursor() as cur:
-        cur.execute(
-            """
-            ALTER TABLE requirement_items
-            ADD COLUMN IF NOT EXISTS missing_course_code TEXT
-            """
-        )
-        cur.execute(
-            """
-            ALTER TABLE requirement_items
-            ADD COLUMN IF NOT EXISTS requirement_text TEXT
-            """
-        )
-        cur.execute(
-            """
-            ALTER TABLE requirement_items
-            ALTER COLUMN required_course_id DROP NOT NULL
-            """
-        )
-
 
 def insert_requirement_group(
     conn,
     course_id: int,
     group_type: str,
     parent_group_id: Optional[int],
-    display_label: Optional[str],
     visual_style: Optional[str],
 ) -> int:
     """Insert a requirement group and return its new ID."""
@@ -738,13 +676,12 @@ def insert_requirement_group(
                 course_id,
                 group_type,
                 parent_group_id,
-                display_label,
                 visual_style
             )
-            VALUES (%s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s)
             RETURNING id
             """,
-            (course_id, group_type, parent_group_id, display_label, visual_style),
+            (course_id, group_type, parent_group_id, visual_style),
         )
         return cur.fetchone()[0]
 
@@ -776,40 +713,6 @@ def insert_requirement_item(
         )
 
 
-def insert_course_edge(
-    conn,
-    source_course_id: int,
-    target_course_id: int,
-    edge_type: str,
-    group_id: Optional[int],
-    label: Optional[str],
-) -> None:
-    """Insert a graph edge from a required course to its target course."""
-    with conn.cursor() as cur:
-        cur.execute(
-            """
-            INSERT INTO course_edges (
-                source_course_id,
-                target_course_id,
-                edge_type,
-                group_id,
-                label
-            )
-            VALUES (%s, %s, %s, %s, %s)
-            """,
-            (source_course_id, target_course_id, edge_type, group_id, label),
-        )
-
-
-def resolve_group_edge_type(group: ParsedGroup) -> str:
-    """Map a parsed group to the convenience edge type stored in the database."""
-    if group.relation_type == "COREQ":
-        return "COREQ"
-    if group.group_type == "ANY_OF":
-        return "OR"
-    return "PREREQ"
-
-
 def _persist_group(
     conn,
     course_id: int,
@@ -818,14 +721,8 @@ def _persist_group(
     parent_group_id: Optional[int],
     code_to_id: dict[str, int],
 ) -> int:
-    """Persist a single parsed group with its items and edges."""
+    """Persist a single parsed group and its items."""
     stored_group_type = "COREQ" if group.relation_type == "COREQ" else group.group_type
-
-    display_label = group.display_label or infer_group_display_label(
-        stored_group_type,
-        group.relation_type,
-        (group.raw_fragment or "").lower(),
-    )
 
     visual_style = group.visual_style or infer_visual_style(
         stored_group_type,
@@ -839,7 +736,6 @@ def _persist_group(
         course_id=course_id,
         group_type=stored_group_type,
         parent_group_id=parent_group_id,
-        display_label=display_label,
         visual_style=visual_style,
     )
 
@@ -870,15 +766,6 @@ def _persist_group(
             required_course_id=required_course_id,
             relation_type=group.relation_type,
             item_order=item_order,
-        )
-
-        insert_course_edge(
-            conn=conn,
-            source_course_id=required_course_id,
-            target_course_id=course_id,
-            edge_type=resolve_group_edge_type(group),
-            group_id=group_id,
-            label=display_label,
         )
 
     for requirement_index, requirement_text in enumerate(group.requirement_texts):
@@ -1017,7 +904,6 @@ def process_all_courses() -> None:
     - preserved item order
     """
     with psycopg.connect(DATABASE_URL) as conn:
-        ensure_requirement_item_schema(conn)
         code_to_id = get_course_code_to_id(conn)
 
         with conn.cursor() as cur:

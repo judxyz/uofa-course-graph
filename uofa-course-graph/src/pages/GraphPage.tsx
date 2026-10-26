@@ -1,3 +1,8 @@
+/**
+ * File: GraphPage.tsx
+ * Purpose: Compose the course graph page and its controls.
+ */
+
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { GraphCanvas } from '../components/GraphCanvas'
@@ -7,7 +12,7 @@ import {
   DEFAULT_GRAPH_COURSE_DISPLAY,
   formatCourseCodeForDisplay,
   formatCourseCodeForRoute,
-} from '../lib/courseCode'
+} from '../lib/normalizeCourseCode'
 
 const COURSE_DEPTH_OPTIONS = [1, 2, 3, 4]
 
